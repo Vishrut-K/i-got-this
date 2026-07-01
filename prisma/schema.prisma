@@ -1,0 +1,39 @@
+// ARCHITECTURE DECISION: Prisma Schema
+// - Why it exists: This is the single source of truth for your database schema. It defines how your tables look and how they relate to each other.
+// - Why this structure scales well: Prisma translates this highly readable schema into complex SQL migrations and generates a fully type-safe TypeScript client. If you change a model here, your whole application knows about it instantly.
+// - Tradeoffs: Prisma does some heavy lifting under the hood. For extremely complex queries or raw performance tuning, writing pure SQL might be faster, but Prisma's developer experience and type safety speed up development exponentially for 99% of apps.
+// - Avoiding beginner mistakes: We define only the provider ("postgresql") and url. We do not add complex models yet to keep the initial connection setup focused and verifiable.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  habits    Habit[]
+  createdAt DateTime @default(now())
+}
+
+model Habit {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  logs HabitLog[]
+}
+
+model HabitLog {
+  id String @id @default(cuid())
+  habitId String
+  date String
+  status String 
+  habit Habit @relation(fields: [habitId], references: [id])
+}
