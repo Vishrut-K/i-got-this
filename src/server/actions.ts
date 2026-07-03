@@ -52,3 +52,25 @@ export async function toggleHabitStatus(habitId: string, day: string, newStatus:
   }
   revalidatePath("/");
 }
+export async function addTodo(title: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  await prisma.todo.create({
+    data: {
+      title: title,
+      userId: session.user.id
+    }
+  });
+
+  revalidatePath("/todos"); // Refresh the Todos page!
+}
+
+export async function toggleTodo(todoId: string, currentStatus: boolean) {
+  await prisma.todo.update({
+    where: { id: todoId },
+    data: { isDone: !currentStatus } // Flip it! If true, make false. If false, make true.
+  });
+
+  revalidatePath("/todos");
+}
