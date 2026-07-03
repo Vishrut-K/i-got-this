@@ -25,6 +25,7 @@ model User {
   habits        Habit[]
   sessions      Session[]
   accounts      Account[]
+  todos Todo[]
 }
 
 model Habit {
@@ -80,4 +81,13 @@ model Verification {
   expiresAt  DateTime
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
+}
+
+model Todo {
+  id        String   @id @default(cuid())
+  title     String
+  isDone    Boolean  @default(false)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
