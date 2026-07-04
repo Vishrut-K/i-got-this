@@ -25,7 +25,7 @@ model User {
   habits        Habit[]
   sessions      Session[]
   accounts      Account[]
-  todos Todo[]
+  journalEntries JournalEntry[]
 }
 
 model Habit {
@@ -83,11 +83,15 @@ model Verification {
   updatedAt  DateTime @updatedAt
 }
 
-model Todo {
+model JournalEntry {
   id        String   @id @default(cuid())
-  title     String
-  isDone    Boolean  @default(false)
+  content   String
+  tasks     Json     @default("[]")
+  date      String
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
 }

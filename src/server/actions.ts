@@ -52,31 +52,6 @@ export async function toggleHabitStatus(habitId: string, day: string, newStatus:
   }
   revalidatePath("/");
 }
-export async function addTodo(title: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Not logged in!");
-
-  await prisma.todo.create({
-    data: {
-      title: title,
-      userId: session.user.id
-    }
-  });
-
-  revalidatePath("/todos"); // Refresh the Todos page!
-}
-
-export async function toggleTodo(todoId: string, currentStatus: boolean) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Not logged in!");
-
-  await prisma.todo.update({
-    where: { id: todoId, userId: session.user.id },
-    data: { isDone: !currentStatus } 
-  });
-
-  revalidatePath("/todos");
-}
 
 export async function deleteHabit(habitId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -109,17 +84,3 @@ export async function clearAllHabitLogs() {
   revalidatePath("/dashboard");
 }
 
-export async function deleteTodo(todoId: string) {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Not logged in!");
-
-  // Tell Prisma to delete this specific row from the Todo table
-  await prisma.todo.delete({
-    where: { 
-      id: todoId, 
-      userId: session.user.id // Security check!
-    }
-  });
-  
-  revalidatePath("/todos"); // Refresh the page instantly
-}
