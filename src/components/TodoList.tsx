@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { addTodo, toggleTodo } from "@/server/actions";
+import { addTodo, toggleTodo, deleteTodo } from "@/server/actions";
 
 type Todo = {
   id: string;
@@ -43,14 +43,23 @@ export default function TodoList({ todos }: { todos: Todo[] }) {
           <p className="text-zinc-500 text-center py-8">No tasks yet. Add one above!</p>
         ) : (
           todos.map((todo) => (
-            <div key={todo.id} className="flex items-center gap-3 p-4 border rounded-lg shadow-sm">
+            <div key={todo.id} className="flex justify-between items-center p-4 border rounded-lg shadow-sm">
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => deleteTodo(todo.id)} 
+                  className="text-zinc-400 hover:text-red-500 font-bold text-xl mr-2" 
+                  title="Delete Task"
+                >
+                  ✕
+                </button>
+                <span className={`text-lg ${todo.isDone ? 'line-through text-zinc-500' : ''}`}>
+                  {todo.title}
+                </span>
+              </div>
               <div 
                 onClick={() => toggleTodo(todo.id, todo.isDone)}
                 className={`w-6 h-6 rounded-md border-2 cursor-pointer transition-colors ${todo.isDone ? 'bg-blue-600 border-blue-600' : 'border-zinc-400 hover:border-zinc-500'}`}
               ></div>
-              <span className={`text-lg ${todo.isDone ? 'line-through text-zinc-500' : ''}`}>
-                {todo.title}
-              </span>
             </div>
           ))
         )}

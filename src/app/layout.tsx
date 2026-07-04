@@ -1,6 +1,7 @@
 import Link from "next/link";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import LogoutButton from "@/components/LogoutButton";
 
 export default function RootLayout({
   children,
@@ -18,6 +19,8 @@ export default function RootLayout({
               <Link href="/" className="hover:text-blue-500 transition-colors">Tracker</Link>
               <Link href="/todos" className="hover:text-blue-500 transition-colors">To-Dos</Link>
               <Link href="/dashboard" className="hover:text-blue-500 transition-colors">Dashboard</Link>
+              <Link href="/dashboard" className="hover:text-blue-500 transition-colors">Dashboard</Link>
+<LogoutButton />
             </div>
           </nav>
           {/* --- NAVBAR ENDS HERE --- */}

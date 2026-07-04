@@ -108,3 +108,18 @@ export async function clearAllHabitLogs() {
   revalidatePath("/");
   revalidatePath("/dashboard");
 }
+
+export async function deleteTodo(todoId: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  // Tell Prisma to delete this specific row from the Todo table
+  await prisma.todo.delete({
+    where: { 
+      id: todoId, 
+      userId: session.user.id // Security check!
+    }
+  });
+  
+  revalidatePath("/todos"); // Refresh the page instantly
+}
