@@ -75,81 +75,100 @@ export default function HabitGrid({ habits }: { habits: Habit[] }) {
   const totalHabits = habits.length;
   const completedCount = completedToday.length;
   const percentage = totalHabits === 0 ? 0 : Math.round((completedCount / totalHabits) * 100);
-  const isProductiveDay = percentage >= 70;
 
   return (
-    <div className="max-w-3xl mx-auto p-8 font-sans">
-      <div className="mb-8 border-b pb-4">
-        <div className="flex justify-between items-end mb-2">
-          <h1 className="text-3xl font-bold">Today's Progress</h1>
-          <span className={`text-xl font-semibold ${isProductiveDay ? "text-green-500" : "text-blue-500"}`}>
+    <div className="max-w-3xl mx-auto p-8 font-sans text-stone-800">
+      
+      {/* Editorial Header */}
+      <div className="mb-12 pb-6 border-b border-stone-300/50">
+        <div className="flex justify-between items-end mb-4">
+          <h1 className="text-4xl font-serif text-stone-900 tracking-tight">Today's Progress</h1>
+          <span className="text-3xl font-serif text-stone-400 italic">
             {percentage}%
           </span>
         </div>
-        <div className="w-full bg-zinc-200 dark:bg-zinc-800 rounded-full h-2.5 mb-4 overflow-hidden">
+        
+        {/* Soft, thin progress bar like a pencil line filling with ink */}
+        <div className="w-full bg-stone-200/50 rounded-full h-1 mb-6 overflow-hidden">
           <div 
-            className={`h-2.5 rounded-full transition-all duration-500 ${isProductiveDay ? "bg-green-500" : "bg-blue-600"}`} 
+            className="h-1 rounded-full transition-all duration-1000 ease-out bg-stone-800" 
             style={{ width: `${percentage}%` }}
           ></div>
         </div>
-        <div className="flex justify-between items-center mt-4">
-          <p className="text-zinc-500 italic">"The secret of your future is hidden in your daily routine."</p>
+        
+        <div className="flex justify-between items-center">
+          <p className="text-stone-500 font-serif italic text-lg tracking-wide">"Quietly becoming better every day."</p>
           <button 
             onClick={handleClearAll}
-            className="text-sm text-red-500 hover:text-red-600 font-medium"
+            className="text-xs text-stone-400 hover:text-stone-800 uppercase tracking-widest transition-colors"
           >
-            Clear All Progress
+            Clear Progress
           </button>
         </div>
       </div>
 
-      <div className="flex gap-2 mb-6">
+      {/* Elegant Add Input */}
+      <div className="flex gap-4 mb-10">
         <input 
           type="text" 
-          placeholder="Add a new habit..." 
-          className="flex-1 p-2 border rounded-md dark:bg-black dark:border-zinc-800"
+          placeholder="cultivate a new habit..." 
+          className="flex-1 p-4 bg-white/40 backdrop-blur-sm border border-stone-200 rounded-xl focus:outline-none focus:border-stone-400 focus:ring-1 focus:ring-stone-400 transition-all placeholder:text-stone-400 text-stone-700 shadow-sm"
           value={newHabitName}
           onChange={(e) => setNewHabitName(e.target.value)}
         />
         <button 
           onClick={handleAddHabit}
-          className="px-4 py-2 bg-zinc-900 dark:bg-white text-white dark:text-black font-medium rounded-md"
+          className="px-8 py-4 bg-stone-800 hover:bg-stone-700 text-stone-50 font-medium rounded-xl shadow-md transition-all uppercase tracking-wider text-sm"
         >
           Add
         </button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      {/* Layered Paper Cards */}
+      <div className="flex flex-col gap-5">
         {habits.map((habit) => (
-          <div key={habit.id} className="flex justify-between items-center p-4 border rounded-lg shadow-sm">
-            <div className="flex items-center gap-3">
-              <button onClick={() => handleDeleteHabit(habit.id)} className="text-zinc-400 hover:text-red-500 font-bold" title="Delete Habit">
+          <div key={habit.id} className="flex justify-between items-center p-6 bg-white/60 backdrop-blur-md border border-stone-200/60 rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_30px_-4px_rgba(0,0,0,0.05)] transition-all duration-300 group">
+            
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => handleDeleteHabit(habit.id)} 
+                className="text-stone-300 hover:text-red-900 transition-colors opacity-0 group-hover:opacity-100" 
+                title="Remove Habit"
+              >
                 ✕
               </button>
-              <span className="font-medium text-lg">{habit.name}</span>
+              <span className="font-serif text-xl text-stone-800">{habit.name}</span>
             </div>
-            <div className="flex gap-2">
+            
+            <div className="flex gap-3">
                {dynamicDays.map((day) => {
                   const status = logs[`${habit.id}-${day.dateKey}`] || "EMPTY"; 
-                  let circleColor = "border-zinc-700 hover:bg-zinc-800"; 
-                  if (status === "DONE") circleColor = "bg-blue-600 border-blue-600";
-                  if (status === "SKIP") circleColor = "bg-zinc-500 border-zinc-500";
+                  
+                  // Ink Stamp Styling
+                  let circleColor = "border-stone-300 bg-transparent hover:border-stone-400"; // Empty (pencil outline)
+                  if (status === "DONE") circleColor = "bg-stone-800 border-stone-800 scale-105 shadow-inner"; // Done (Dark Ink stamp)
+                  if (status === "SKIP") circleColor = "bg-stone-200 border-stone-200 text-transparent"; // Skip (Faint mark)
 
                   return (
-                    <div key={day.dateKey} className="flex flex-col items-center gap-1">
-                        <span className="text-xs text-zinc-500">{day.label}</span>
+                    <div key={day.dateKey} className="flex flex-col items-center gap-2">
+                        <span className="text-[10px] uppercase tracking-wider text-stone-400 font-medium">{day.label}</span>
                         <div 
                           onClick={() => toggleStatus(habit.id, day.dateKey)}
-                          className={`w-8 h-8 rounded-full border-2 cursor-pointer transition-colors ${circleColor}`}
+                          className={`w-10 h-10 rounded-full border-[1.5px] cursor-pointer transition-all duration-300 flex items-center justify-center ${circleColor}`}
                           title={day.dateKey}
-                        ></div>
+                        >
+                          {/* Inner dot for 'Done' to make it feel more tactile */}
+                          {status === "DONE" && <div className="w-3 h-3 bg-stone-100 rounded-full opacity-50"></div>}
+                        </div>
                     </div>
                   );
                })}
             </div>
+            
           </div>
         ))}
       </div>
+      
     </div>
   );
 }

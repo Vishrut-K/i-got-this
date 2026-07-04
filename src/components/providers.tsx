@@ -10,8 +10,8 @@ export function Providers({
   return (
     <ThemeProvider
       attribute="class"
-      defaultTheme="dark"
-      enableSystem
+      defaultTheme="light"
+      enableSystem={false}
     >
       {children}
     </ThemeProvider>
