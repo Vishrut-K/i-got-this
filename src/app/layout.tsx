@@ -1,6 +1,7 @@
 import Link from "next/link";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { Analytics } from '@vercel/analytics/next';
 
 export default function RootLayout({
   children,
@@ -27,6 +28,7 @@ export default function RootLayout({
             {children}
           </div>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
