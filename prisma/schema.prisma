@@ -42,7 +42,7 @@ model HabitLog {
   habitId String
   date String
   status String 
-  habit Habit @relation(fields: [habitId], references: [id])
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
 }
 
 model Session {

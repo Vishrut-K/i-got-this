@@ -1,17 +1,31 @@
 "use client"; 
 
 import { useState } from "react";
-import { addHabit, toggleHabitStatus } from "@/server/actions";
+import { addHabit, toggleHabitStatus, deleteHabit, clearAllHabitLogs } from "@/server/actions";
 
-// 1. Notice how we added logs here!
 type Habit = {
   id: string;
   name: string;
   logs: { date: string; status: string }[]; 
 };
 
+// Generate the last 5 days dynamically based on the user's current day
+const generateLastFiveDays = () => {
+  const days = [];
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateKey = d.toISOString().split('T')[0]; // "YYYY-MM-DD" format for Database
+    const label = d.toLocaleDateString('en-US', { weekday: 'short' }); // "Mon" format for UI
+    days.push({ dateKey, label });
+  }
+  return days;
+};
+
 export default function HabitGrid({ habits }: { habits: Habit[] }) {
-  // 2. We translate the database logs into our scoreboard format
+  const dynamicDays = generateLastFiveDays();
+  const todayKey = dynamicDays[4].dateKey;
+
   const initialScoreboard: Record<string, string> = {};
   habits.forEach(habit => {
     if (habit.logs) {
@@ -30,6 +44,19 @@ export default function HabitGrid({ habits }: { habits: Habit[] }) {
     setNewHabitName(""); 
   };
 
+  const handleDeleteHabit = async (habitId: string) => {
+    if (confirm("Are you sure you want to delete this habit and all its progress?")) {
+      await deleteHabit(habitId);
+    }
+  };
+
+  const handleClearAll = async () => {
+    if (confirm("Are you sure you want to clear all progress logs? Your habits will stay, but the checkmarks will be wiped so you can start fresh. This cannot be undone.")) {
+      await clearAllHabitLogs();
+      setLogs({}); // Instantly clear the UI
+    }
+  };
+
   const toggleStatus = async (habitId: string, day: string) => {
     const key = `${habitId}-${day}`; 
     const currentStatus = logs[key];
@@ -38,19 +65,15 @@ export default function HabitGrid({ habits }: { habits: Habit[] }) {
     if (currentStatus === "DONE") newStatus = "SKIP";
     if (currentStatus === "SKIP") newStatus = "EMPTY";
 
-    // Update UI instantly
     setLogs({ ...logs, [key]: newStatus });
-
-    // 3. THIS IS WHAT YOU WERE MISSING! Secretly send to database!
     await toggleHabitStatus(habitId, day, newStatus);
   };
 
-  const pastFiveDays = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-
-  const fridays = Object.keys(logs).filter((key) => key.endsWith("-Fri"));
-  const completedFridays = fridays.filter((key) => logs[key] === "DONE");
+  // Calculate today's percentage dynamically
+  const todaysLogs = Object.keys(logs).filter((key) => key.endsWith(todayKey));
+  const completedToday = todaysLogs.filter((key) => logs[key] === "DONE");
   const totalHabits = habits.length;
-  const completedCount = completedFridays.length;
+  const completedCount = completedToday.length;
   const percentage = totalHabits === 0 ? 0 : Math.round((completedCount / totalHabits) * 100);
   const isProductiveDay = percentage >= 70;
 
@@ -69,7 +92,15 @@ export default function HabitGrid({ habits }: { habits: Habit[] }) {
             style={{ width: `${percentage}%` }}
           ></div>
         </div>
-        <p className="text-zinc-500 italic">"The secret of your future is hidden in your daily routine."</p>
+        <div className="flex justify-between items-center mt-4">
+          <p className="text-zinc-500 italic">"The secret of your future is hidden in your daily routine."</p>
+          <button 
+            onClick={handleClearAll}
+            className="text-sm text-red-500 hover:text-red-600 font-medium"
+          >
+            Clear All Progress
+          </button>
+        </div>
       </div>
 
       <div className="flex gap-2 mb-6">
@@ -91,20 +122,26 @@ export default function HabitGrid({ habits }: { habits: Habit[] }) {
       <div className="flex flex-col gap-4">
         {habits.map((habit) => (
           <div key={habit.id} className="flex justify-between items-center p-4 border rounded-lg shadow-sm">
-            <span className="font-medium text-lg">{habit.name}</span>
+            <div className="flex items-center gap-3">
+              <button onClick={() => handleDeleteHabit(habit.id)} className="text-zinc-400 hover:text-red-500 font-bold" title="Delete Habit">
+                ✕
+              </button>
+              <span className="font-medium text-lg">{habit.name}</span>
+            </div>
             <div className="flex gap-2">
-               {pastFiveDays.map((day) => {
-                  const status = logs[`${habit.id}-${day}`] || "EMPTY"; 
+               {dynamicDays.map((day) => {
+                  const status = logs[`${habit.id}-${day.dateKey}`] || "EMPTY"; 
                   let circleColor = "border-zinc-700 hover:bg-zinc-800"; 
                   if (status === "DONE") circleColor = "bg-blue-600 border-blue-600";
                   if (status === "SKIP") circleColor = "bg-zinc-500 border-zinc-500";
 
                   return (
-                    <div key={day} className="flex flex-col items-center gap-1">
-                        <span className="text-xs text-zinc-500">{day}</span>
+                    <div key={day.dateKey} className="flex flex-col items-center gap-1">
+                        <span className="text-xs text-zinc-500">{day.label}</span>
                         <div 
-                          onClick={() => toggleStatus(habit.id, day)}
+                          onClick={() => toggleStatus(habit.id, day.dateKey)}
                           className={`w-8 h-8 rounded-full border-2 cursor-pointer transition-colors ${circleColor}`}
+                          title={day.dateKey}
                         ></div>
                     </div>
                   );

@@ -67,10 +67,44 @@ export async function addTodo(title: string) {
 }
 
 export async function toggleTodo(todoId: string, currentStatus: boolean) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
   await prisma.todo.update({
-    where: { id: todoId },
-    data: { isDone: !currentStatus } // Flip it! If true, make false. If false, make true.
+    where: { id: todoId, userId: session.user.id },
+    data: { isDone: !currentStatus } 
   });
 
   revalidatePath("/todos");
+}
+
+export async function deleteHabit(habitId: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  await prisma.habit.delete({
+    where: { id: habitId, userId: session.user.id }
+  });
+  revalidatePath("/");
+  revalidatePath("/dashboard");
+}
+
+export async function clearAllHabitLogs() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  // Delete all habit logs where the habit belongs to the user
+  const userHabits = await prisma.habit.findMany({
+    where: { userId: session.user.id },
+    select: { id: true }
+  });
+  
+  const habitIds = userHabits.map(h => h.id);
+  
+  await prisma.habitLog.deleteMany({
+    where: { habitId: { in: habitIds } }
+  });
+
+  revalidatePath("/");
+  revalidatePath("/dashboard");
 }

@@ -10,18 +10,34 @@ type HabitLog = {
 };
 
 export default function DashboardCharts({ logs }: { logs: HabitLog[] }) {
-  // We do a little math to count how many habits were "DONE" each day
-  const dataMap: Record<string, number> = { "Mon": 0, "Tue": 0, "Wed": 0, "Thu": 0, "Fri": 0 };
-  
+    // 1. Generate the last 5 days dynamically (just like the Grid)
+  const days = [];
+  for (let i = 4; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({
+      dateKey: d.toISOString().split('T')[0], // e.g. "2024-10-24" (Matches the DB)
+      label: d.toLocaleDateString('en-US', { weekday: 'short' }) // e.g. "Thu" (For the Chart)
+    });
+  }
+
+  // 2. Set up a blank scoreboard using those dynamic dates
+  const dataMap: Record<string, { label: string, count: number }> = {};
+  days.forEach(day => {
+    dataMap[day.dateKey] = { label: day.label, count: 0 };
+  });
+
+  // 3. Loop through the database logs and count the "DONE" habits
   logs.forEach(log => {
-    if (log.status === "DONE" && dataMap[log.date] !== undefined) {
-      dataMap[log.date] += 1;
+    if (log.status === "DONE" && dataMap[log.date]) {
+      dataMap[log.date].count += 1;
     }
   });
 
-  const chartData = Object.keys(dataMap).map(day => ({
-    name: day,
-    completed: dataMap[day]
+  // 4. Format the final array exactly how the Recharts library expects it
+  const chartData = days.map(day => ({
+    name: day.label,
+    completed: dataMap[day.dateKey].count
   }));
 
   return (
