@@ -55,7 +55,11 @@
   --border: oklch(0.90 0.02 80);     /* Soft pencil line */
 }
 
-  
+.dark {
+  --background: oklch(0.16 0.01 80); /* Warm Deep Charcoal / Stone */
+  --foreground: oklch(0.88 0.01 80); /* Soft Warm Light */
+  --border: oklch(0.22 0.01 80);     /* Subtle dark border */
+}
 @layer base {
   * {
     @apply border-border outline-ring/50;

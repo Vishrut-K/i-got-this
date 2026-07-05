@@ -11,6 +11,10 @@ import QuoteSection from "@/components/today/QuoteSection";
 import NotesPreview from "@/components/today/NotesPreview";
 import { calculateTodayProgress } from "@/lib/progress";
 
+export const metadata = {
+  title: "Today | I-got-this",
+};
+
 export default async function TodayPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   

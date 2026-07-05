@@ -22,6 +22,20 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Preferences
+  currentGoal         String?
+  weekStartsOn        String    @default("Monday")
+  productiveThreshold Int       @default(70)
+  timeFormat          String    @default("12h")
+  accentColor         String    @default("stone")
+  dailyQuote          Boolean   @default(true)
+  autosave            Boolean   @default(true)
+  searchHistory       Boolean   @default(true)
+  fontSize            String    @default("Medium")
+  dailyReminder       Boolean   @default(false)
+  weeklyReview        String    @default("Sunday")
+  monthlySummary      Boolean   @default(true)
+
   habits        Habit[]
   sessions      Session[]
   accounts      Account[]

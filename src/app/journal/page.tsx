@@ -4,6 +4,11 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import JournalHeader from "@/components/journal/JournalHeader";
 import JournalEditor from "@/components/journal/JournalEditor";
+import { Circle, Activity } from "lucide-react";
+
+export const metadata = {
+  title: "Journal | I-got-this",
+};
 
 export default async function JournalPage(
   props: { searchParams: Promise<{ date?: string }> }

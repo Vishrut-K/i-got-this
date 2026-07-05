@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, HelpCircle } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, HelpCircle, Trash2 } from "lucide-react";
+import { clearJournalEntry } from "@/server/actions";
 
 export default function JournalHeader({ currentDate }: { currentDate: string }) {
   const router = useRouter();
@@ -75,8 +76,24 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
         </div>
 
         {/* Search */}
-        <button className="flex items-center gap-1.5 p-1.5 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
+        <button className="flex items-center gap-1.5 p-1.5 hover:text-stone-800 dark:hover:text-stone-200 transition-colors" title="Search">
           <Search size={16} strokeWidth={2.5} />
+        </button>
+
+        {/* Wipe Page */}
+        <button 
+          onClick={async () => {
+            if (confirm("Are you sure you want to tear out this page? This will erase today's entry.")) {
+              await clearJournalEntry(currentDate);
+              router.refresh();
+              // Optionally trigger a full page reload or UI reset event since the tiptap editor holds state.
+              window.location.reload();
+            }
+          }}
+          className="flex items-center gap-1.5 p-1.5 text-red-400 hover:text-red-600 dark:hover:text-red-500 transition-colors"
+          title="Tear off page (Clear)"
+        >
+          <Trash2 size={16} strokeWidth={2.5} />
         </button>
 
         {/* Help Tooltip */}
