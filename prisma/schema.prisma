@@ -26,23 +26,30 @@ model User {
   sessions      Session[]
   accounts      Account[]
   journalEntries JournalEntry[]
+  achievements  Achievement[]
 }
 
 model Habit {
-  id        String   @id @default(cuid())
-  name      String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  createdAt DateTime @default(now())
-  logs HabitLog[]
+  id         String    @id @default(cuid())
+  name       String
+  iconId     String    @default("activity")
+  color      String    @default("stone")
+  archivedAt DateTime?
+  userId     String
+  user       User      @relation(fields: [userId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  logs       HabitLog[]
 }
 
 model HabitLog {
-  id String @id @default(cuid())
-  habitId String
-  date String
-  status String 
-  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  habitId   String
+  date      String
+  status    String 
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Session {
@@ -94,4 +101,18 @@ model JournalEntry {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  name        String   
+  description String   
+  iconId      String   
+  earnedAt    DateTime @default(now())
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

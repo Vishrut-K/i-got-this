@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import LogoutButton from "@/components/LogoutButton";
 import { Lora, Inter } from "next/font/google";
 import Grainient from "@/components/Grainient";
+import Navbar from "@/components/Navbar";
 
 const lora = Lora({ subsets: ["latin"], variable: "--font-serif" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -37,25 +38,16 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative`}>
         
         <PremiumPaperBackground />
 
         <Providers>
-          {/* --- NAVBAR STARTS HERE --- */}
-          <nav className="border-b dark:border-zinc-800 p-4 sticky top-0 bg-white/40 backdrop-blur-md z-50">
-            <div className="max-w-3xl mx-auto flex gap-6 items-center">
-              <span className="font-bold text-xl mr-4 tracking-tight font-serif text-zinc-800">i-got-it</span>
-              <Link href="/" className="hover:text-amber-700 transition-colors">Tracker</Link>
-              <Link href="/todos" className="hover:text-amber-700 transition-colors">To-Dos</Link>
-              <Link href="/dashboard" className="hover:text-amber-700 transition-colors">Dashboard</Link>
-              <LogoutButton />
-            </div>
-          </nav>
+          <Navbar />
           {/* --- NAVBAR ENDS HERE --- */}
 
           {/* This is where your page content goes! */}
-          <div className="pt-8 relative z-10">
+          <div className="pt-2 relative z-10">
             {children}
           </div>
         </Providers>

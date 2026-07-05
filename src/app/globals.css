@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
@@ -65,4 +66,15 @@
   html {
     @apply font-sans;
   }
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  color: #a8a29e;
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}
+.dark .tiptap p.is-editor-empty:first-child::before {
+  color: #57534e;
 }

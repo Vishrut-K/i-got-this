@@ -5,19 +5,20 @@ import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 
-export async function addHabit(name: string) {
+export async function addHabit(name: string, iconId: string, color: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
-  // Ask Prisma to create a new row in the database
+  // Ask Prisma to create a new row with the icon and color data
   await prisma.habit.create({
     data: {
       name: name,
+      iconId: iconId,
+      color: color,
       userId: session.user.id
     }
   });
 
-  // Tell Next.js to instantly refresh the homepage to show the new data!
   revalidatePath("/"); 
 }
 
@@ -25,23 +26,19 @@ export async function toggleHabitStatus(habitId: string, day: string, newStatus:
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
-  // 1. Search the database to see if a click already exists for this habit on this day
   const existingLog = await prisma.habitLog.findFirst({
     where: {
       habitId: habitId,
-      date: day, // E.g., "Mon"
+      date: day,
     }
   });
 
-  // 2. The Upsert Logic
   if (existingLog) {
-    // If it exists, UPDATE it!
     await prisma.habitLog.update({
       where: { id: existingLog.id },
       data: { status: newStatus }
     });
   } else {
-    // If it doesn't exist, INSERT it!
     await prisma.habitLog.create({
       data: {
         habitId: habitId,
@@ -53,34 +50,67 @@ export async function toggleHabitStatus(habitId: string, day: string, newStatus:
   revalidatePath("/");
 }
 
-export async function deleteHabit(habitId: string) {
+// TEACHING MOMENT: Data Integrity (Archive vs Delete)
+// We NEVER delete a habit. If we delete it, we lose all the history of when they checked it off.
+// Instead, we mark it as "Archived". This hides it from the UI but keeps the data safe!
+export async function archiveHabit(habitId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
-  await prisma.habit.delete({
-    where: { id: habitId, userId: session.user.id }
+  await prisma.habit.update({
+    where: { id: habitId, userId: session.user.id },
+    data: { archivedAt: new Date() }
   });
+  
   revalidatePath("/");
-  revalidatePath("/dashboard");
 }
 
-export async function clearAllHabitLogs() {
+export async function saveJournalEntry(date: string, content: string, tasks: any = []) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
-  // Delete all habit logs where the habit belongs to the user
-  const userHabits = await prisma.habit.findMany({
-    where: { userId: session.user.id },
-    select: { id: true }
+  // UPSERT: The smartest database command.
+  // "If it exists, update it. If it doesn't, create it."
+  await prisma.journalEntry.upsert({
+    where: {
+      userId_date: { userId: session.user.id, date: date }
+    },
+    update: {
+      content: content,
+      tasks: tasks
+    },
+    create: {
+      userId: session.user.id,
+      date: date,
+      content: content,
+      tasks: tasks
+    }
   });
-  
-  const habitIds = userHabits.map(h => h.id);
-  
-  await prisma.habitLog.deleteMany({
-    where: { habitId: { in: habitIds } }
-  });
-
-  revalidatePath("/");
-  revalidatePath("/dashboard");
 }
 
+export async function getJournalEntry(date: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return null;
+
+  return await prisma.journalEntry.findUnique({
+    where: {
+      userId_date: { userId: session.user.id, date: date }
+    }
+  });
+}
+
+export async function clearJournalEntry(date: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  // "Tear the page" - we just update it to be blank instead of deleting the row
+  await prisma.journalEntry.update({
+    where: {
+      userId_date: { userId: session.user.id, date: date }
+    },
+    data: {
+      content: "",
+      tasks: []
+    }
+  });
+}
