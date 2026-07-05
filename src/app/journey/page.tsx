@@ -1,7 +1,6 @@
 import { getJourneyStats } from "@/server/actions";
 import JourneyHeatmap from "@/components/journey/JourneyHeatmap";
 import HabitStatsCard from "@/components/journey/HabitStatsCard";
-import HabitMatrix from "@/components/journey/HabitMatrix";
 import { Award, CalendarDays, Download } from "lucide-react";
 
 export const metadata = {
@@ -58,21 +57,6 @@ export default async function JourneyPage() {
         </h2>
         <div className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-800/50 shadow-sm overflow-hidden">
           <JourneyHeatmap data={stats.heatmapData} />
-        </div>
-      </section>
-
-      {/* 4. Habit Matrix */}
-      <section className="mb-16">
-        <h2 className="text-[11px] font-sans tracking-[0.15em] uppercase text-stone-500 font-bold mb-6 flex items-center gap-4">
-          Habit Matrix
-          <div className="flex-1 h-px bg-stone-200/50 dark:bg-stone-800/50"></div>
-        </h2>
-        <div className="p-6 rounded-2xl bg-white dark:bg-stone-900 border border-stone-200/50 dark:border-stone-800/50 shadow-sm overflow-hidden">
-          <HabitMatrix 
-            habits={stats.habitBreakdown} 
-            matrixDays={stats.matrixDays} 
-            habitMatrixData={stats.habitMatrixData} 
-          />
         </div>
       </section>
 

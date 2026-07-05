@@ -40,14 +40,14 @@ export default function JourneyHeatmap({ data }: { data: Record<string, number> 
   }
 
   const getColorClass = (score: number, isFuture: boolean) => {
-    if (isFuture) return "bg-transparent border border-stone-200/50 dark:border-stone-800/50 opacity-20";
-    if (score === -1) return "bg-stone-200 dark:bg-stone-800 opacity-50"; // Skipped, no progress
-    if (score === 0) return "bg-stone-100 dark:bg-stone-900";
-    if (score === 1) return "bg-[#b0c4b1] dark:bg-[#2b402c]";
-    if (score === 2) return "bg-[#84a59d] dark:bg-[#3d5a40]";
-    if (score === 3) return "bg-[#52796f] dark:bg-[#4a6750]";
-    if (score >= 4) return "bg-[#354f52] dark:bg-[#5c7e63]";
-    return "bg-stone-100 dark:bg-stone-900";
+    if (isFuture) return "bg-transparent border border-stone-200/50 dark:border-stone-700/50 opacity-20";
+    if (score === -1) return "bg-stone-200 dark:bg-stone-700 opacity-50"; // Skipped, no progress
+    if (score === 0) return "bg-stone-100 dark:bg-stone-800";
+    if (score === 1) return "bg-[#b0c4b1] dark:bg-[#2c3d30]";
+    if (score === 2) return "bg-[#84a59d] dark:bg-[#39513e]";
+    if (score === 3) return "bg-[#52796f] dark:bg-[#45654d]";
+    if (score >= 4) return "bg-[#354f52] dark:bg-[#527a5b]";
+    return "bg-stone-100 dark:bg-stone-800";
   };
 
   return (
@@ -68,11 +68,11 @@ export default function JourneyHeatmap({ data }: { data: Record<string, number> 
       <div className="flex items-center gap-2 mt-6 text-[10px] uppercase tracking-widest font-semibold text-stone-400">
         <span>Less</span>
         <div className="flex gap-1">
-          <div className="w-3 h-3 rounded-sm bg-stone-100 dark:bg-stone-900" />
-          <div className="w-3 h-3 rounded-sm bg-[#b0c4b1] dark:bg-[#2b402c]" />
-          <div className="w-3 h-3 rounded-sm bg-[#84a59d] dark:bg-[#3d5a40]" />
-          <div className="w-3 h-3 rounded-sm bg-[#52796f] dark:bg-[#4a6750]" />
-          <div className="w-3 h-3 rounded-sm bg-[#354f52] dark:bg-[#5c7e63]" />
+          <div className="w-3 h-3 rounded-sm bg-stone-100 dark:bg-stone-800" />
+          <div className="w-3 h-3 rounded-sm bg-[#b0c4b1] dark:bg-[#2c3d30]" />
+          <div className="w-3 h-3 rounded-sm bg-[#84a59d] dark:bg-[#39513e]" />
+          <div className="w-3 h-3 rounded-sm bg-[#52796f] dark:bg-[#45654d]" />
+          <div className="w-3 h-3 rounded-sm bg-[#354f52] dark:bg-[#527a5b]" />
         </div>
         <span>More</span>
       </div>
