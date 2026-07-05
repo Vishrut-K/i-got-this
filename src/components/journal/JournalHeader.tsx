@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, HelpCircle } from "lucide-react";
 
 export default function JournalHeader({ currentDate }: { currentDate: string }) {
   const router = useRouter();
@@ -78,6 +78,23 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
         <button className="flex items-center gap-1.5 p-1.5 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
           <Search size={16} strokeWidth={2.5} />
         </button>
+
+        {/* Help Tooltip */}
+        <div className="relative group flex items-center">
+          <button className="p-1.5 text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
+            <HelpCircle size={16} strokeWidth={2.5} />
+          </button>
+          
+          <div className="absolute right-0 top-full mt-2 w-48 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity bg-[#F4F4F0] dark:bg-[#1A1A18] border border-stone-200 dark:border-stone-800 shadow-md rounded-lg p-3 z-50 text-xs">
+            <p className="font-bold tracking-widest uppercase text-[10px] text-stone-500 dark:text-stone-400 mb-3">Shortcuts</p>
+            <div className="space-y-2 text-stone-600 dark:text-stone-300 font-medium">
+              <div className="flex justify-between items-center"><code className="bg-stone-200 dark:bg-stone-800 px-1 py-0.5 rounded text-[10px]">[] Space</code><span>Checklist</span></div>
+              <div className="flex justify-between items-center"><code className="bg-stone-200 dark:bg-stone-800 px-1 py-0.5 rounded text-[10px]"># Space</code><span>Heading</span></div>
+              <div className="flex justify-between items-center"><code className="bg-stone-200 dark:bg-stone-800 px-1 py-0.5 rounded text-[10px]">- Space</code><span>Bullet List</span></div>
+              <div className="flex justify-between items-center"><code className="bg-stone-200 dark:bg-stone-800 px-1 py-0.5 rounded text-[10px]">**Text**</code><span>Bold</span></div>
+            </div>
+          </div>
+        </div>
 
       </div>
     </div>

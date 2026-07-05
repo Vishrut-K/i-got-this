@@ -26,7 +26,7 @@ export default function Navbar() {
           {/* Center Column: The Brand */}
           <div className="flex justify-center">
             <span className="font-bold text-xl tracking-tight font-serif text-stone-800 dark:text-stone-200 select-none">
-              i-got-it
+              I-got-this
             </span>
           </div>
 

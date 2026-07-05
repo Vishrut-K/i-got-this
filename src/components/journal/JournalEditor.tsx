@@ -85,8 +85,8 @@ export default function JournalEditor({ initialContent, date }: { initialContent
   if (!editor) return null;
 
   return (
-    <div className="relative flex-1">
-      <div className="absolute -top-10 right-0 text-[10px] font-medium text-stone-400 dark:text-stone-500 transition-opacity flex items-center gap-1.5">
+    <div className="relative flex-1 flex flex-col mt-2">
+      <div className="flex justify-end text-[10px] font-medium text-stone-400 dark:text-stone-500 transition-opacity items-center gap-1.5 mb-4 h-3">
         {status === "saving" ? (
           "Saving..."
         ) : (
