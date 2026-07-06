@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -23,7 +24,8 @@ export default function Navbar() {
           </div>
 
           {/* Center Column: The Brand */}
-          <div className="flex justify-center">
+          <div className="flex justify-center items-center gap-2">
+            <Image src="/logo.png" alt="Logo" width={24} height={24} className="w-6 h-6 object-contain grayscale opacity-90 rounded-full overflow-hidden shadow-sm bg-white" unoptimized />
             <span className="font-bold text-xl tracking-tight font-serif text-stone-800 dark:text-stone-200 select-none">
               I-got-this
             </span>

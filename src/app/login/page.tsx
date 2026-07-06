@@ -57,12 +57,15 @@ export default function LoginPage() {
 
   const handleGoogleAuth = async () => {
     setIsGoogleLoading(true);
-    // TODO: Actually configure Google OAuth in better-auth
-    // await signIn.social({ provider: "google" });
-    setTimeout(() => {
-      toast.info("Google OAuth needs to be configured in Better Auth.");
+    try {
+      await signIn.social({
+        provider: "google",
+        callbackURL: "/"
+      });
+    } catch (error: any) {
+      toast.error(error.message || "An error occurred during Google sign in");
       setIsGoogleLoading(false);
-    }, 1000);
+    }
   };
 
   const handleForgotPassword = async () => {
