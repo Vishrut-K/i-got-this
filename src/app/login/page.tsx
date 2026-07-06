@@ -92,7 +92,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F1EE] text-[#423D33] overflow-hidden px-6 py-8 sm:py-10">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#F4F1EE] text-[#423D33] overflow-hidden px-6 py-8 sm:py-10">
       
       {/* Tiny radial gradient + Noise texture */}
       <div className="fixed inset-0 pointer-events-none z-0">

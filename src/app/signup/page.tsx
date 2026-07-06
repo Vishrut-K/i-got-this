@@ -1,4 +1,4 @@
-import LoginPage from "../login/page";
+import LoginPage from "@/app/login/page";
 
 export const metadata = {
   title: "Sign up | I-got-this",
