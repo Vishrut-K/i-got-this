@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
+import { getLocalTodayStr } from "@/lib/date";
 import JournalHeader from "@/components/journal/JournalHeader";
 import JournalEditor from "@/components/journal/JournalEditor";
 import { Circle, Activity } from "lucide-react";
@@ -17,15 +18,15 @@ export default async function JournalPage(
   const session = await auth.api.getSession({ headers: await headers() });
   
   if (!session) {
-    redirect("/auth/sign-in");
+    redirect("/login");
   }
 
-  // Get the date to display (defaults to today)
+  // Get the date to display (defaults to today in local timezone)
   let dateStr = searchParams.date;
   if (!dateStr) {
-    const today = new Date();
-    // Use local date format by adjusting offset manually or just YYYY-MM-DD
-    dateStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
+    const cookieStore = await cookies();
+    const tz = cookieStore.get("x-timezone")?.value || "UTC";
+    dateStr = getLocalTodayStr(tz);
   }
 
   // Fetch the entry for this date

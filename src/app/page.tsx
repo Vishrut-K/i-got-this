@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma"; 
+import { cookies } from "next/headers";
+import { getLast7DaysStr } from "@/lib/date";
 
 // Import components
 import TodayHeader from "@/components/today/TodayHeader";
@@ -19,7 +21,7 @@ export default async function TodayPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   
   if (!session) {
-    redirect("/auth/sign-in");
+    redirect("/login");
   }
 
   // Fetch habits
@@ -30,12 +32,12 @@ export default async function TodayPage() {
 
   const activeHabits = habits.filter(h => !h.archivedAt);
 
-  // Calculate the last 7 days (including today)
-  const last7Days = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d.toISOString().split("T")[0];
-  });
+  // Fetch timezone from cookies
+  const cookieStore = await cookies();
+  const tz = cookieStore.get("x-timezone")?.value || "UTC";
+
+  // Calculate the last 7 days (including today) using timezone
+  const last7Days = getLast7DaysStr(tz);
   const todayStr = last7Days[6];
 
   // Fetch ALL logs for the user's active habits (needed for streaks)
@@ -53,9 +55,7 @@ export default async function TodayPage() {
   const { doneCount, eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
 
   // Fetch yesterday's journal
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = yesterday.toISOString().split("T")[0];
+  const yesterdayStr = last7Days[5];
 
   const yesterdayJournal = await prisma.journalEntry.findUnique({
     where: {

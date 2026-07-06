@@ -4,8 +4,11 @@ import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, HelpCircle, Trash2 } from "lucide-react";
 import { clearJournalEntry } from "@/server/actions";
 
+import { useToast } from "@/contexts/ToastContext";
+
 export default function JournalHeader({ currentDate }: { currentDate: string }) {
   const router = useRouter();
+  const toast = useToast();
 
   const handleDateChange = (date: string) => {
     router.push(`/journal?date=${date}`);
@@ -82,13 +85,15 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
 
         {/* Wipe Page */}
         <button 
-          onClick={async () => {
-            if (confirm("Are you sure you want to tear out this page? This will erase today's entry.")) {
-              await clearJournalEntry(currentDate);
-              router.refresh();
-              // Optionally trigger a full page reload or UI reset event since the tiptap editor holds state.
-              window.location.reload();
-            }
+          onClick={() => {
+            toast.confirm(
+              "Are you sure you want to tear out this page? This will erase today's entry.",
+              async () => {
+                await clearJournalEntry(currentDate);
+                router.refresh();
+                window.location.reload();
+              }
+            );
           }}
           className="flex items-center gap-1.5 p-1.5 text-red-400 hover:text-red-600 dark:hover:text-red-500 transition-colors"
           title="Tear off page (Clear)"

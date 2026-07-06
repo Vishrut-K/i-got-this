@@ -53,12 +53,14 @@
   --background: oklch(0.96 0.01 85); /* Warm Ivory */
   --foreground: oklch(0.25 0.01 50); /* Soft Charcoal */
   --border: oklch(0.90 0.02 80);     /* Soft pencil line */
+  --loader-stair: #d6d3d1;           /* Visible light gray */
 }
 
 .dark {
   --background: oklch(0.16 0.01 80); /* Warm Deep Charcoal / Stone */
   --foreground: oklch(0.88 0.01 80); /* Soft Warm Light */
   --border: oklch(0.22 0.01 80);     /* Subtle dark border */
+  --loader-stair: #78716c;           /* Visible mid gray for dark mode */
 }
 @layer base {
   * {
@@ -178,4 +180,66 @@ ul[data-type="taskList"] li[data-checked="true"] > div {
 }
 .dark .prose ol > li::marker {
   color: #a8a29e !important;
+}
+
+/* --- Global Loader --- */
+.global-loader-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 120px);
+  width: 100%;
+}
+
+.custom-loader {
+  position: relative;
+  width: 120px;
+  height: 90px;
+  margin: 0 auto;
+}
+
+.custom-loader:before {
+  content: "";
+  position: absolute;
+  bottom: 30px;
+  left: 50px;
+  height: 30px;
+  width: 30px;
+  border-radius: 50%;
+  background: #2a9d8f;
+  animation: loading-bounce 0.5s ease-in-out infinite alternate;
+}
+
+.custom-loader:after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  height: 7px;
+  width: 45px;
+  border-radius: 4px;
+  box-shadow: 0 5px 0 var(--loader-stair), -35px 50px 0 var(--loader-stair), -70px 95px 0 var(--loader-stair);
+  animation: loading-step 1s ease-in-out infinite;
+}
+
+@keyframes loading-bounce {
+  0% { transform: scale(1, 0.7); }
+  40% { transform: scale(0.8, 1.2); }
+  60% { transform: scale(1, 1); }
+  100% { bottom: 140px; }
+}
+
+@keyframes loading-step {
+  0% {
+    box-shadow: 0 10px 0 rgba(0, 0, 0, 0),
+            0 10px 0 var(--loader-stair),
+            -35px 50px 0 var(--loader-stair),
+            -70px 90px 0 var(--loader-stair);
+  }
+  100% {
+    box-shadow: 0 10px 0 var(--loader-stair),
+            -35px 50px 0 var(--loader-stair),
+            -70px 90px 0 var(--loader-stair),
+            -70px 90px 0 rgba(0, 0, 0, 0);
+  }
 }

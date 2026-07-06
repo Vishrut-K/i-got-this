@@ -5,6 +5,9 @@ import LogoutButton from "@/components/LogoutButton";
 import { Lora, Inter } from "next/font/google";
 import Grainient from "@/components/Grainient";
 import Navbar from "@/components/Navbar";
+import TimezoneProvider from "@/components/providers/TimezoneProvider";
+
+import { ToastProvider } from "@/components/ui/ToastProvider";
 
 const lora = Lora({ subsets: ["latin"], variable: "--font-serif" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
@@ -38,19 +41,23 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative overflow-y-scroll`}>
         
         <PremiumPaperBackground />
 
-        <Providers>
-          <Navbar />
-          {/* --- NAVBAR ENDS HERE --- */}
+        <TimezoneProvider>
+          <Providers>
+            <ToastProvider>
+              <Navbar />
+              {/* --- NAVBAR ENDS HERE --- */}
 
-          {/* This is where your page content goes! */}
-          <div className="pt-2 relative z-10">
-            {children}
-          </div>
-        </Providers>
+              {/* This is where your page content goes! */}
+              <div className="pt-2 relative z-10">
+                {children}
+              </div>
+            </ToastProvider>
+          </Providers>
+        </TimezoneProvider>
       </body>
     </html>
   );

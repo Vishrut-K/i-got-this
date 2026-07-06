@@ -4,11 +4,13 @@ import { useState, Suspense } from "react";
 import { resetPassword } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/contexts/ToastContext";
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
+  const toast = useToast();
   
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -16,11 +18,11 @@ function ResetPasswordForm() {
 
   const handleResetPassword = async () => {
     if (!token) {
-      alert("Invalid or missing reset token.");
+      toast.error("Invalid or missing reset token.");
       return;
     }
     if (!password) {
-      alert("Please enter a new password.");
+      toast.error("Please enter a new password.");
       return;
     }
     
@@ -32,9 +34,9 @@ function ResetPasswordForm() {
       });
       
       if (error) {
-        alert(error.message);
+        toast.error(error.message);
       } else {
-        alert("Password updated successfully! You can now log in.");
+        toast.success("Password updated successfully! You can now log in.");
         router.push("/login");
       }
     } finally {

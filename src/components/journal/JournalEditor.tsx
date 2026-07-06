@@ -66,7 +66,9 @@ export default function JournalEditor({ initialContent, date }: { initialContent
         setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       } catch (e) {
         console.error("Failed to save journal", e);
-        // Retry logic could go here
+        setStatus("saving"); // Keep status in non-saved state
+        // Optionally show toast error if we had toast imported, 
+        // but for now setting it back to 'saving' prevents silent failure feeling
       }
     }, 1500);
 

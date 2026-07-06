@@ -4,10 +4,12 @@ import { useState } from "react";
 import * as Icons from "lucide-react";
 import { restoreHabit, deleteHabitForever } from "@/server/actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function ArchiveClient({ initialHabits }: { initialHabits: any[] }) {
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const router = useRouter();
+  const toast = useToast();
 
   const handleRestore = async (id: string) => {
     setIsProcessing(id);
@@ -17,12 +19,15 @@ export default function ArchiveClient({ initialHabits }: { initialHabits: any[] 
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to permanently delete this habit and all its history?")) {
-      setIsProcessing(id);
-      await deleteHabitForever(id);
-      router.refresh();
-      setIsProcessing(null);
-    }
+    toast.confirm(
+      "Are you sure you want to permanently delete this habit and all its history?",
+      async () => {
+        setIsProcessing(id);
+        await deleteHabitForever(id);
+        router.refresh();
+        setIsProcessing(null);
+      }
+    );
   };
 
   return (

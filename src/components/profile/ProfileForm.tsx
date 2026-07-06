@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 import { updateUserPreferences } from "@/server/actions";
@@ -9,7 +9,12 @@ import { LogOut } from "lucide-react";
 
 export default function ProfileForm({ user }: { user: any }) {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Local state for optimistic updates
   const [goal, setGoal] = useState(user.currentGoal || "");
@@ -96,19 +101,22 @@ export default function ProfileForm({ user }: { user: any }) {
           <div className="flex flex-col gap-3">
             <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Theme</span>
             <div className="flex p-1 bg-stone-100 dark:bg-stone-900 rounded-lg w-fit border border-stone-200 dark:border-stone-800">
-              {['light', 'system', 'dark'].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t)}
-                  className={`px-6 py-2 text-sm font-medium rounded-md capitalize transition-all ${
-                    theme === t 
-                      ? "bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-sm" 
-                      : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
-                  }`}
-                >
-                  {t}
-                </button>
-              ))}
+              {['light', 'system', 'dark'].map((t) => {
+                const isActive = mounted ? theme === t : t === 'light';
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setTheme(t)}
+                    className={`px-6 py-2 text-sm font-medium rounded-md capitalize transition-all ${
+                      isActive 
+                        ? "bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 shadow-sm" 
+                        : "text-stone-500 hover:text-stone-700 dark:hover:text-stone-300"
+                    }`}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

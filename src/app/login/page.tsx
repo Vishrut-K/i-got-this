@@ -4,9 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { signIn, signUp, forgetPassword } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
+import { useToast } from "@/contexts/ToastContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const toast = useToast();
   
   // State
   const [isSignUp, setIsSignUp] = useState(false);
@@ -37,14 +39,14 @@ export default function LoginPage() {
             password, 
             name: name || email.split("@")[0] // Fallback to email prefix if left blank
         });
-        if (error) alert(error.message); 
+        if (error) toast.error(error.message); 
         else router.push("/"); 
       } else {
         const { error } = await signIn.email({ 
             email, 
             password 
         });
-        if (error) alert(error.message);
+        if (error) toast.error(error.message);
         else router.push("/");
       }
     } finally {
@@ -57,14 +59,14 @@ export default function LoginPage() {
     // TODO: Actually configure Google OAuth in better-auth
     // await signIn.social({ provider: "google" });
     setTimeout(() => {
-      alert("Google OAuth needs to be configured in Better Auth.");
+      toast.info("Google OAuth needs to be configured in Better Auth.");
       setIsGoogleLoading(false);
     }, 1000);
   };
 
   const handleForgotPassword = async () => {
     if (!email) {
-      alert("Please enter your email address first.");
+      toast.error("Please enter your email address first.");
       emailRef.current?.focus();
       return;
     }
@@ -75,9 +77,9 @@ export default function LoginPage() {
         redirectTo: "/reset-password",
       });
       if (error) {
-        alert(error.message);
+        toast.error(error.message);
       } else {
-        alert("If an account exists, a password reset link has been sent to your email.");
+        toast.success("If an account exists, a password reset link has been sent to your email.");
         setIsForgotPassword(false);
       }
     } finally {

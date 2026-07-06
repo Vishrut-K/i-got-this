@@ -3,13 +3,15 @@
 import { useState } from "react";
 import { deleteUserAccount } from "@/server/actions";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/contexts/ToastContext";
+import { authClient } from "@/lib/auth-client";
 
 export default function DangerZone() {
-  const [step, setStep] = useState<"IDLE" | "PASSWORD" | "CONFIRM">("IDLE");
-  const [password, setPassword] = useState("");
+  const [step, setStep] = useState<"IDLE" | "CONFIRM">("IDLE");
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  const toast = useToast();
 
   const handleDelete = async () => {
     if (confirmText !== "DELETE") return;
@@ -17,12 +19,11 @@ export default function DangerZone() {
     setIsDeleting(true);
     try {
       await deleteUserAccount();
-      // Since everything cascades, the session might be destroyed on the DB side, 
-      // but we should ideally use authClient to sign out or redirect.
-      // For now, redirect to home. The auth wrapper will catch it.
+      // Sign out on the client to clear the session cookie properly
+      await authClient.signOut();
       window.location.href = "/login";
     } catch (e) {
-      alert("Failed to delete account.");
+      toast.error("Failed to delete account.");
       setIsDeleting(false);
     }
   };
@@ -36,38 +37,11 @@ export default function DangerZone() {
       
       {step === "IDLE" && (
         <button 
-          onClick={() => setStep("PASSWORD")}
+          onClick={() => setStep("CONFIRM")}
           className="text-red-500 hover:text-red-700 dark:hover:text-red-400 text-sm font-medium transition-colors"
         >
           Delete Account
         </button>
-      )}
-
-      {step === "PASSWORD" && (
-        <div className="flex flex-col gap-3 max-w-sm">
-          <p className="text-sm text-stone-500">Enter your password to continue.</p>
-          <input 
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="px-4 py-2 bg-stone-100 dark:bg-stone-900 rounded-lg outline-none border border-stone-200 dark:border-stone-800 text-sm"
-            placeholder="Password"
-          />
-          <div className="flex gap-2 mt-2">
-            <button 
-              onClick={() => setStep("CONFIRM")}
-              className="px-4 py-2 bg-stone-800 dark:bg-stone-200 text-stone-100 dark:text-stone-900 rounded-lg text-sm font-medium"
-            >
-              Next
-            </button>
-            <button 
-              onClick={() => { setStep("IDLE"); setPassword(""); }}
-              className="px-4 py-2 text-stone-500 text-sm font-medium"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
       )}
 
       {step === "CONFIRM" && (
@@ -89,7 +63,7 @@ export default function DangerZone() {
               {isDeleting ? "Deleting..." : "Delete Forever"}
             </button>
             <button 
-              onClick={() => { setStep("IDLE"); setPassword(""); setConfirmText(""); }}
+              onClick={() => { setStep("IDLE"); setConfirmText(""); }}
               className="px-4 py-2 text-stone-500 text-sm font-medium"
             >
               Cancel

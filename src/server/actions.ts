@@ -4,6 +4,8 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
+import { getLocalTodayStr } from "@/lib/date";
 
 export async function addHabit(name: string, iconId: string, color: string) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -25,6 +27,14 @@ export async function addHabit(name: string, iconId: string, color: string) {
 export async function toggleHabitStatus(habitId: string, day: string, newStatus: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
+
+  const habit = await prisma.habit.findFirst({
+    where: { id: habitId, userId: session.user.id }
+  });
+
+  if (!habit) {
+    throw new Error("Habit not found or access denied");
+  }
 
   const existingLog = await prisma.habitLog.findFirst({
     where: {
@@ -194,9 +204,9 @@ export async function getJourneyStats() {
     const logMap = new Map(logs.map(l => [l.date, l.status]));
     
     // Calculate streaks by iterating backwards from today
-    const today = new Date();
-    today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-    const todayStr = today.toISOString().split('T')[0];
+    const cookieStore = await cookies();
+    const tz = cookieStore.get("x-timezone")?.value || "UTC";
+    const todayStr = getLocalTodayStr(tz);
     
     // Check current streak
     let d = new Date(today);
@@ -251,9 +261,9 @@ export async function getJourneyStats() {
   });
 
   // 5. Build Habit Matrix (Last 14 Days)
-  const globalToday = new Date();
-  globalToday.setMinutes(globalToday.getMinutes() - globalToday.getTimezoneOffset());
-  const globalTodayStr = globalToday.toISOString().split('T')[0];
+  const cookieStoreTz = await cookies();
+  const globalTz = cookieStoreTz.get("x-timezone")?.value || "UTC";
+  const globalTodayStr = getLocalTodayStr(globalTz);
 
   const matrixDays: string[] = [];
   const startMatrixDate = new Date(globalTodayStr);
@@ -303,9 +313,31 @@ export async function updateUserPreferences(data: any) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
+  const allowedFields = [
+    "currentGoal",
+    "weekStartsOn",
+    "productiveThreshold",
+    "timeFormat",
+    "accentColor",
+    "dailyQuote",
+    "autosave",
+    "searchHistory",
+    "fontSize",
+    "dailyReminder",
+    "weeklyReview",
+    "monthlySummary"
+  ];
+
+  const safeData: any = {};
+  for (const field of allowedFields) {
+    if (data[field] !== undefined) {
+      safeData[field] = data[field];
+    }
+  }
+
   return prisma.user.update({
     where: { id: session.user.id },
-    data: data
+    data: safeData
   });
 }
 
