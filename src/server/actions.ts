@@ -11,8 +11,21 @@ export async function addHabit(name: string, iconId: string, color: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
+  if (typeof name !== "string" || name.length > 100) throw new Error("Invalid name");
+  if (typeof iconId !== "string" || iconId.length > 50) throw new Error("Invalid iconId");
+  if (typeof color !== "string" || color.length > 50) throw new Error("Invalid color");
+
+  // Enforce maximum 50 habits per user
+  const habitCount = await prisma.habit.count({
+    where: { userId: session.user.id }
+  });
+
+  if (habitCount >= 50) {
+    throw new Error("Maximum of 50 habits reached. Archive or delete old ones first.");
+  }
+
   // Ask Prisma to create a new row with the icon and color data
-  await prisma.habit.create({
+  const habit = await prisma.habit.create({
     data: {
       name: name,
       iconId: iconId,
@@ -21,12 +34,19 @@ export async function addHabit(name: string, iconId: string, color: string) {
     }
   });
 
-  revalidatePath("/"); 
+  revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  return { ok: true, habitId: habit.id };
 }
 
 export async function toggleHabitStatus(habitId: string, day: string, newStatus: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
+
+  if (!["DONE", "SKIP", "EMPTY"].includes(newStatus)) {
+    throw new Error("Invalid status");
+  }
 
   const habit = await prisma.habit.findFirst({
     where: { id: habitId, userId: session.user.id }
@@ -58,6 +78,9 @@ export async function toggleHabitStatus(habitId: string, day: string, newStatus:
     });
   }
   revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  return { ok: true };
 }
 
 // TEACHING MOMENT: Data Integrity (Archive vs Delete)
@@ -73,11 +96,19 @@ export async function archiveHabit(habitId: string) {
   });
   
   revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  revalidatePath("/profile/archive");
+  return { ok: true };
 }
 
 export async function saveJournalEntry(date: string, content: string, tasks: any = []) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
+
+  if (typeof content !== "string" || content.length > 100000) {
+    throw new Error("Content too large");
+  }
 
   // UPSERT: The smartest database command.
   // "If it exists, update it. If it doesn't, create it."
@@ -114,15 +145,19 @@ export async function clearJournalEntry(date: string) {
   if (!session) throw new Error("Not logged in!");
 
   // "Tear the page" - we just update it to be blank instead of deleting the row
-  await prisma.journalEntry.update({
-    where: {
-      userId_date: { userId: session.user.id, date: date }
-    },
-    data: {
-      content: "",
-      tasks: []
-    }
-  });
+  try {
+    await prisma.journalEntry.update({
+      where: {
+        userId_date: { userId: session.user.id, date: date }
+      },
+      data: {
+        content: "",
+        tasks: []
+      }
+    });
+  } catch (e) {
+    // Ignore P2025 error if no entry exists
+  }
 }
 
 // ==========================================
@@ -193,6 +228,10 @@ export async function getJourneyStats() {
   });
 
   // 4. Habit Breakdown (Streaks and Rates)
+  const cookieStore = await cookies();
+  const tz = cookieStore.get("x-timezone")?.value || "UTC";
+  const todayStr = getLocalTodayStr(tz);
+
   const habitBreakdown = habits.filter(h => !h.archivedAt).map(habit => {
     const logs = allLogs.filter(l => l.habitId === habit.id).sort((a, b) => a.date.localeCompare(b.date));
     
@@ -204,13 +243,11 @@ export async function getJourneyStats() {
     const logMap = new Map(logs.map(l => [l.date, l.status]));
     
     // Calculate streaks by iterating backwards from today
-    const cookieStore = await cookies();
-    const tz = cookieStore.get("x-timezone")?.value || "UTC";
-    const todayStr = getLocalTodayStr(tz);
     
     // Check current streak
-    let d = new Date(today);
-    while (true) {
+    let d = new Date(todayStr);
+    let loops = 0;
+    while (loops < 1000) {
       const dStr = d.toISOString().split('T')[0];
       const status = logMap.get(dStr);
       if (status === "DONE") {
@@ -222,6 +259,7 @@ export async function getJourneyStats() {
         if (dStr !== todayStr) break;
       }
       d.setDate(d.getDate() - 1);
+      loops++;
     }
 
     // Calculate best streak (simplified forward pass)
@@ -274,17 +312,20 @@ export async function getJourneyStats() {
     matrixDays.push(d.toISOString().split('T')[0]);
   }
 
+  // Pre-compute O(1) map
+  const allLogsMap = new Map(allLogs.map(l => [`${l.habitId}-${l.date}`, l.status]));
+
   const habitMatrixData: Record<string, Record<string, string>> = {};
   habits.filter(h => !h.archivedAt).forEach(habit => {
     habitMatrixData[habit.id] = {};
     const habitCreatedAt = habit.createdAt.toISOString().split('T')[0];
     
     matrixDays.forEach(day => {
-      const log = allLogs.find(l => l.habitId === habit.id && l.date === day);
+      const status = allLogsMap.get(`${habit.id}-${day}`);
       if (day < habitCreatedAt) {
         habitMatrixData[habit.id][day] = "UNAVAILABLE";
-      } else if (log) {
-        habitMatrixData[habit.id][day] = log.status;
+      } else if (status) {
+        habitMatrixData[habit.id][day] = status;
       } else {
         habitMatrixData[habit.id][day] = "EMPTY";
       }
@@ -365,31 +406,99 @@ export async function getUserProfile() {
 
   // Calculate stats
   let totalCompletions = 0;
-  let productiveDaysSet = new Set<string>();
+  const daysMap = new Map<string, { done: number, total: number }>();
   
   allLogs.forEach(log => {
+    if (!daysMap.has(log.date)) {
+      const activeHabits = habits.filter(h => h.createdAt.toISOString().split('T')[0] <= log.date);
+      daysMap.set(log.date, { done: 0, total: activeHabits.length });
+    }
+    
+    const dayStats = daysMap.get(log.date)!;
     if (log.status === "DONE") {
       totalCompletions++;
-      productiveDaysSet.add(log.date);
+      dayStats.done++;
     }
   });
 
-  const { habitBreakdown } = await getJourneyStats(); // Re-use streak math
-  const longestActiveStreak = habitBreakdown.reduce((max, h) => Math.max(max, h.currentStreak), 0);
-  const bestAllTimeStreak = habitBreakdown.reduce((max, h) => Math.max(max, h.bestStreak), 0);
+  let productiveDaysCount = 0;
+  const threshold = (user?.productiveThreshold || 70) / 100;
+  daysMap.forEach((stats) => {
+    if (stats.total > 0 && (stats.done / stats.total) >= threshold) {
+      productiveDaysCount++;
+    }
+  });
+
+  const cookieStore = await cookies();
+  const todayStr = getLocalTodayStr(cookieStore.get("x-timezone")?.value || "UTC");
+  const logsByHabit = new Map<string, Map<string, string>>();
+
+  allLogs.forEach((log) => {
+    if (!logsByHabit.has(log.habitId)) {
+      logsByHabit.set(log.habitId, new Map());
+    }
+    logsByHabit.get(log.habitId)!.set(log.date, log.status);
+  });
+
+  const streaks = habits
+    .filter((habit) => !habit.archivedAt)
+    .map((habit) => {
+      const logMap = logsByHabit.get(habit.id) || new Map<string, string>();
+      let currentStreak = 0;
+      let bestStreak = 0;
+      let tempStreak = 0;
+      let cursor = new Date(habit.createdAt.toISOString().split("T")[0]);
+      const today = new Date(todayStr);
+
+      while (cursor <= today) {
+        const date = cursor.toISOString().split("T")[0];
+        const status = logMap.get(date);
+
+        if (status === "DONE") {
+          tempStreak++;
+          bestStreak = Math.max(bestStreak, tempStreak);
+        } else if (status !== "SKIP") {
+          tempStreak = 0;
+        }
+
+        cursor.setDate(cursor.getDate() + 1);
+      }
+
+      cursor = new Date(todayStr);
+      for (let i = 0; i < 1000; i++) {
+        const date = cursor.toISOString().split("T")[0];
+        const status = logMap.get(date);
+
+        if (status === "DONE") {
+          currentStreak++;
+        } else if (status !== "SKIP" && date !== todayStr) {
+          break;
+        }
+
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      return { currentStreak, bestStreak };
+    });
+
+  const longestActiveStreak = streaks.reduce((max, h) => Math.max(max, h.currentStreak), 0);
+  const bestAllTimeStreak = streaks.reduce((max, h) => Math.max(max, h.bestStreak), 0);
 
   // Storage Stats
   const wordsWritten = await prisma.journalEntry.findMany({
     where: { userId: session.user.id },
     select: { content: true }
-  }).then(entries => entries.reduce((acc, entry) => acc + (entry.content.match(/\w+/g)?.length || 0), 0));
+  }).then(entries => entries.reduce((acc, entry) => {
+    const text = entry.content.replace(/<[^>]+>/g, ' ');
+    return acc + (text.match(/\w+/g)?.length || 0);
+  }, 0));
 
   return {
     user,
     stats: {
       currentStreak: longestActiveStreak,
       bestStreak: bestAllTimeStreak,
-      productiveDays: productiveDaysSet.size,
+      productiveDays: productiveDaysCount,
       journalEntries,
       habitsCreated: habits.length,
       habitLogs: allLogs.length,
@@ -426,6 +535,11 @@ export async function restoreHabit(habitId: string) {
     where: { id: habitId, userId: session.user.id },
     data: { archivedAt: null }
   });
+  revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  revalidatePath("/profile/archive");
+  return { ok: true };
 }
 
 export async function deleteHabitForever(habitId: string) {
@@ -435,6 +549,11 @@ export async function deleteHabitForever(habitId: string) {
   await prisma.habit.delete({
     where: { id: habitId, userId: session.user.id }
   });
+  revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  revalidatePath("/profile/archive");
+  return { ok: true };
 }
 
 export async function deleteUserAccount() {

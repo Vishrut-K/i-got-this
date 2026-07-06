@@ -12,7 +12,8 @@ export function calculateStreaks(habitId: string, logs: HabitLog[], todayStr: st
   let checkDate = new Date(today);
 
   // 1. Calculate Current Streak (Walking backwards from today)
-  while (true) {
+  let loops = 0;
+  while (loops < 1000) {
     const dateStr = checkDate.toISOString().split("T")[0];
     const status = logMap[dateStr] || "EMPTY";
     
@@ -29,6 +30,7 @@ export function calculateStreaks(habitId: string, logs: HabitLog[], todayStr: st
       }
     }
     checkDate.setDate(checkDate.getDate() - 1);
+    loops++;
   }
 
   // 2. Calculate Best Streak (Walking forwards from the first log)

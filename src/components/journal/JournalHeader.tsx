@@ -6,7 +6,7 @@ import { clearJournalEntry } from "@/server/actions";
 
 import { useToast } from "@/contexts/ToastContext";
 
-export default function JournalHeader({ currentDate }: { currentDate: string }) {
+export default function JournalHeader({ currentDate, isToday }: { currentDate: string, isToday?: boolean }) {
   const router = useRouter();
   const toast = useToast();
 
@@ -29,11 +29,6 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
   const displayDate = displayDateObj.toLocaleDateString('en-US', { 
     weekday: 'long', month: 'long', day: 'numeric' 
   });
-
-  // Check if current date is today
-  const today = new Date();
-  const todayStr = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().split('T')[0];
-  const isToday = currentDate === todayStr;
 
   return (
     <div className="flex items-center justify-between mb-2 py-2 border-b border-stone-200/50 dark:border-stone-800/50 relative z-10">
@@ -67,7 +62,7 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
               onChange={(e) => handleDateChange(e.target.value)}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
             />
-            <button className="p-1.5 hover:bg-white dark:hover:bg-stone-800 shadow-sm rounded transition-colors text-stone-500 hover:text-stone-800 dark:hover:text-stone-200">
+            <button aria-label="Select date" className="p-1.5 hover:bg-white dark:hover:bg-stone-800 shadow-sm rounded transition-colors text-stone-500 hover:text-stone-800 dark:hover:text-stone-200">
               <CalendarIcon size={14} strokeWidth={2.5} />
             </button>
           </div>
@@ -79,7 +74,7 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
         </div>
 
         {/* Search */}
-        <button className="flex items-center gap-1.5 p-1.5 hover:text-stone-800 dark:hover:text-stone-200 transition-colors" title="Search">
+        <button aria-label="Search journal" className="flex items-center gap-1.5 p-1.5 hover:text-stone-800 dark:hover:text-stone-200 transition-colors" title="Search">
           <Search size={16} strokeWidth={2.5} />
         </button>
 
@@ -97,6 +92,7 @@ export default function JournalHeader({ currentDate }: { currentDate: string }) 
           }}
           className="flex items-center gap-1.5 p-1.5 text-red-400 hover:text-red-600 dark:hover:text-red-500 transition-colors"
           title="Tear off page (Clear)"
+          aria-label="Clear journal entry"
         >
           <Trash2 size={16} strokeWidth={2.5} />
         </button>

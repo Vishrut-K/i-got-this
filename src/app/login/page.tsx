@@ -1,17 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { signIn, signUp, forgetPassword } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
 
 export default function LoginPage() {
   const router = useRouter();
+  const pathname = usePathname();
   const toast = useToast();
   
   // State
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(pathname === "/signup");
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -24,7 +26,6 @@ export default function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Autofocus email on mount
     emailRef.current?.focus();
   }, [isSignUp]); // Refocus when switching modes
 
@@ -39,15 +40,15 @@ export default function LoginPage() {
             password, 
             name: name || email.split("@")[0] // Fallback to email prefix if left blank
         });
-        if (error) toast.error(error.message); 
-        else router.push("/"); 
+        if (error) toast.error(error.message || "An error occurred"); 
+        else router.replace("/"); 
       } else {
         const { error } = await signIn.email({ 
             email, 
             password 
         });
-        if (error) toast.error(error.message);
-        else router.push("/");
+        if (error) toast.error(error.message || "An error occurred");
+        else router.replace("/");
       }
     } finally {
       setIsLoading(false);
@@ -77,7 +78,7 @@ export default function LoginPage() {
         redirectTo: "/reset-password",
       });
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message || "An error occurred");
       } else {
         toast.success("If an account exists, a password reset link has been sent to your email.");
         setIsForgotPassword(false);
@@ -88,25 +89,24 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="fixed inset-0 flex flex-col items-center justify-center bg-background text-foreground overflow-hidden px-6">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F4F1EE] text-[#423D33] overflow-y-auto px-6 py-8 sm:py-10">
       
       {/* Tiny radial gradient + Noise texture */}
       <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent dark:from-white/5 opacity-50" />
-        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}></div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-white/20 via-transparent to-transparent opacity-50" />
+        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}></div>
       </div>
 
       {/* Main Content */}
       <main className="w-full max-w-[380px] flex flex-col z-10 pt-4 pb-12">
         
-        {/* Logo */}
         <div className="w-full flex justify-center mb-8 animate-fade-up delay-0">
-          <img src="/logo.png" alt="I-got-this Logo" className="w-11 h-11 object-contain grayscale opacity-90 dark:invert rounded-[10px] overflow-hidden shadow-sm" />
+          <Image src="/logo.png" alt="I-got-this Logo" width={44} height={44} className="w-11 h-11 object-contain grayscale opacity-90 rounded-[10px] overflow-hidden shadow-sm" priority unoptimized />
         </div>
 
         {/* Heading & Subtitle */}
         <div className="text-center mb-8">
-          <h1 className="text-[26px] font-serif tracking-tight text-stone-900 dark:text-stone-100 animate-fade-up delay-100">
+          <h1 className="text-[26px] font-serif tracking-tight text-stone-900 animate-fade-up delay-100">
             {isForgotPassword ? "Reset password." : (isSignUp ? "Begin your story." : "Welcome back.")}
           </h1>
           <p className="text-[13px] text-stone-500 mt-2 animate-fade-up delay-200">
@@ -122,7 +122,7 @@ export default function LoginPage() {
               <button
                 onClick={handleGoogleAuth}
                 disabled={isGoogleLoading || isLoading}
-                className="w-full h-11 flex items-center justify-center gap-3 bg-white dark:bg-[#1C1B1A] border border-stone-200 dark:border-stone-800 rounded-[10px] text-stone-900 dark:text-stone-100 font-medium text-[14px] hover:bg-stone-50 dark:hover:bg-stone-900 transition-colors shadow-sm disabled:opacity-50"
+                className="w-full h-11 flex items-center justify-center gap-3 bg-white border border-stone-200 rounded-[10px] text-stone-900 font-medium text-[14px] hover:bg-stone-50 transition-colors shadow-sm disabled:opacity-50"
               >
                 {isGoogleLoading ? (
                   <span className="animate-pulse">Continuing...</span>
@@ -170,9 +170,9 @@ export default function LoginPage() {
 
             {/* Divider */}
             <div className="flex items-center my-5 animate-fade-up delay-400">
-              <div className="flex-1 h-px bg-stone-200 dark:bg-stone-800"></div>
+              <div className="flex-1 h-px bg-stone-200"></div>
               <span className="px-4 text-[11px] uppercase tracking-widest text-stone-400">or</span>
-              <div className="flex-1 h-px bg-stone-200 dark:bg-stone-800"></div>
+              <div className="flex-1 h-px bg-stone-200"></div>
             </div>
           </>
         ) : null}
@@ -187,7 +187,7 @@ export default function LoginPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 text-[14px] text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-700 outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors"
+                className="w-full bg-transparent border-b border-stone-200 py-2 text-[14px] text-stone-900 placeholder:text-stone-300 outline-none focus:border-stone-400 transition-colors"
                 placeholder=""
                 onKeyDown={(e) => e.key === "Enter" && handleEmailAuth()}
               />
@@ -201,7 +201,7 @@ export default function LoginPage() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 text-[14px] text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-700 outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors"
+              className="w-full bg-transparent border-b border-stone-200 py-2 text-[14px] text-stone-900 placeholder:text-stone-300 outline-none focus:border-stone-400 transition-colors"
               placeholder=""
               onKeyDown={(e) => e.key === "Enter" && (isForgotPassword ? handleForgotPassword() : handleEmailAuth())}
             />
@@ -215,7 +215,7 @@ export default function LoginPage() {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-transparent border-b border-stone-200 dark:border-stone-800 py-2 text-[14px] text-stone-900 dark:text-stone-100 placeholder:text-stone-300 dark:placeholder:text-stone-700 outline-none focus:border-stone-400 dark:focus:border-stone-600 transition-colors pr-8"
+                  className="w-full bg-transparent border-b border-stone-200 py-2 text-[14px] text-stone-900 placeholder:text-stone-300 outline-none focus:border-stone-400 transition-colors pr-8"
                   placeholder=""
                   onKeyDown={(e) => e.key === "Enter" && handleEmailAuth()}
                 />
@@ -246,7 +246,7 @@ export default function LoginPage() {
             <button
               onClick={handleForgotPassword}
               disabled={isLoading || !email}
-              className="w-full h-11 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-[10px] font-medium text-[14px] hover:bg-stone-800 dark:hover:bg-white transition-colors shadow-sm disabled:opacity-50 mt-1"
+              className="w-full h-11 bg-stone-900 text-white rounded-[10px] font-medium text-[14px] hover:bg-stone-800 transition-colors shadow-sm disabled:opacity-50 mt-1"
             >
               {isLoading ? (
                 <span className="animate-pulse">Sending...</span>
@@ -258,7 +258,7 @@ export default function LoginPage() {
             <button
               onClick={handleEmailAuth}
               disabled={isLoading || isGoogleLoading || !email || !password || (isSignUp && !name)}
-              className="w-full h-11 bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 rounded-[10px] font-medium text-[14px] hover:bg-stone-800 dark:hover:bg-white transition-colors shadow-sm disabled:opacity-50 mt-1"
+              className="w-full h-11 bg-stone-900 text-white rounded-[10px] font-medium text-[14px] hover:bg-stone-800 transition-colors shadow-sm disabled:opacity-50 mt-1"
             >
               {isLoading ? (
                 <span className="animate-pulse">Continuing...</span>
@@ -273,14 +273,18 @@ export default function LoginPage() {
             {isForgotPassword ? (
               <button 
                 onClick={() => setIsForgotPassword(false)}
-                className="text-[13px] font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors"
+                className="text-[13px] font-medium text-stone-500 hover:text-stone-800 transition-colors"
               >
                 ← Back to login
               </button>
             ) : (
               <button 
-                onClick={() => setIsSignUp(!isSignUp)}
-                className="text-[13px] font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-300 transition-colors"
+                onClick={() => {
+                  const nextIsSignUp = !isSignUp;
+                  setIsSignUp(nextIsSignUp);
+                  router.replace(nextIsSignUp ? "/signup" : "/login");
+                }}
+                className="text-[13px] font-medium text-stone-500 hover:text-stone-800 transition-colors"
               >
                 {isSignUp ? "Already have an account? Sign in →" : "New here? Create account →"}
               </button>
@@ -291,7 +295,7 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="absolute bottom-6 w-full text-center z-10 animate-fade-up delay-500">
+      <footer className="w-full text-center z-10 animate-fade-up delay-500 mt-2">
         <p className="text-[11px] text-stone-400">
           Designed to help you become who you want to be.
         </p>

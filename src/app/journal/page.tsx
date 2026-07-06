@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { getLocalTodayStr } from "@/lib/date";
@@ -22,12 +22,16 @@ export default async function JournalPage(
   }
 
   // Get the date to display (defaults to today in local timezone)
+  const cookieStore = await cookies();
+  const tz = cookieStore.get("x-timezone")?.value || "UTC";
+  const todayStr = getLocalTodayStr(tz);
+  
   let dateStr = searchParams.date;
   if (!dateStr) {
-    const cookieStore = await cookies();
-    const tz = cookieStore.get("x-timezone")?.value || "UTC";
-    dateStr = getLocalTodayStr(tz);
+    dateStr = todayStr;
   }
+  
+  const isToday = dateStr === todayStr;
 
   // Fetch the entry for this date
   const entry = await prisma.journalEntry.findUnique({
@@ -51,7 +55,7 @@ export default async function JournalPage(
 
   return (
     <main className="max-w-[760px] mx-auto px-8 pb-32 pt-2 flex flex-col h-full min-h-screen">
-      <JournalHeader currentDate={dateStr} />
+      <JournalHeader currentDate={dateStr} isToday={isToday} />
       <JournalEditor initialContent={entry?.content || ""} date={dateStr} />
       
       {/* Related Habits Section */}

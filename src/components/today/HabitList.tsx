@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { addHabit, toggleHabitStatus, archiveHabit } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
 import { Plus } from "lucide-react";
@@ -14,10 +15,13 @@ export default function HabitList({
 }: {
   habits: Habit[], allLogs: HabitLog[], last7Days: string[]
 }) {
+  const router = useRouter();
   const [newHabitName, setNewHabitName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [showAddInput, setShowAddInput] = useState(false);
   const [animatingId, setAnimatingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isPending, startTransition] = useTransition();
 
   const activeHabits = habits.filter(h => !h.archivedAt);
   const todayStr = last7Days[6];
@@ -27,6 +31,7 @@ export default function HabitList({
   };
 
   const handleToggleToday = async (habitId: string) => {
+    if (isPending) return;
     const current = getStatus(habitId, todayStr);
     let next = "DONE";
     if (current === "DONE") next = "SKIP";
@@ -35,16 +40,44 @@ export default function HabitList({
     setAnimatingId(habitId);
     setTimeout(() => setAnimatingId(null), 200); 
 
-    await toggleHabitStatus(habitId, todayStr, next);
+    setErrorMessage("");
+    startTransition(async () => {
+      try {
+        await toggleHabitStatus(habitId, todayStr, next);
+        router.refresh();
+      } catch {
+        setErrorMessage("That change did not save. Please try again.");
+      }
+    });
   };
 
   const handleAdd = async () => {
     if (!newHabitName.trim()) return;
     setIsAdding(true);
-    await addHabit(newHabitName, "activity", "stone");
-    setNewHabitName("");
-    setIsAdding(false);
-    setShowAddInput(false);
+    setErrorMessage("");
+    try {
+      await addHabit(newHabitName.trim(), "activity", "stone");
+      setNewHabitName("");
+      setShowAddInput(false);
+      router.refresh();
+    } catch {
+      setErrorMessage("Your habit could not be saved. Please try again.");
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
+  const handleArchive = (habitId: string) => {
+    if (isPending) return;
+    setErrorMessage("");
+    startTransition(async () => {
+      try {
+        await archiveHabit(habitId);
+        router.refresh();
+      } catch {
+        setErrorMessage("That habit could not be archived. Please try again.");
+      }
+    });
   };
 
   const dayNames = last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0));
@@ -53,8 +86,14 @@ export default function HabitList({
     <div className="space-y-1">
       {activeHabits.length === 0 && !showAddInput && (
         <div className="text-stone-500 italic py-4">
-          No habits yet. Click below to start your journey.
+          Start with one quiet commitment. You can always adjust it later.
         </div>
+      )}
+
+      {errorMessage && (
+        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+          {errorMessage}
+        </p>
       )}
 
       {/* Grid Header (Invisible on mobile, aligned on desktop) */}
@@ -79,7 +118,7 @@ export default function HabitList({
         const colorClass = COLORS[habit.color as ColorId] || COLORS.stone;
         
         // Progress Engine Math
-        const { currentStreak, bestStreak } = calculateStreaks(habit.id, allLogs, todayStr);
+        const { currentStreak } = calculateStreaks(habit.id, allLogs, todayStr);
         
         return (
           <div key={habit.id} className="relative group">
@@ -109,6 +148,8 @@ export default function HabitList({
                       <button
                         key={dateStr}
                         onClick={() => handleToggleToday(habit.id)}
+                        disabled={isPending}
+                        aria-label={`Toggle habit ${habit.name} for today`}
                         className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 border-2
                           ${isAnimating ? "scale-125" : "scale-100"} 
                           ${todayStatus === "DONE" ? "bg-[#4A6750] border-[#4A6750] text-[#F9F7F1] dark:bg-[#5C7E63] dark:border-[#5C7E63]" : ""}
@@ -138,8 +179,10 @@ export default function HabitList({
               {/* 3. Right: Streak & Actions */}
               <div className="col-span-2 flex items-center justify-end gap-4 pr-4">
                 <button 
-                  onClick={() => archiveHabit(habit.id)}
-                  className="text-xs font-sans uppercase tracking-widest text-stone-400 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-500 hidden md:block"
+                  onClick={() => handleArchive(habit.id)}
+                  disabled={isPending}
+                  aria-label={`Archive habit ${habit.name}`}
+                  className="text-xs font-sans uppercase tracking-widest text-stone-400 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:text-red-500 disabled:opacity-30"
                 >
                   Archive
                 </button>
@@ -159,7 +202,7 @@ export default function HabitList({
         {!showAddInput ? (
           <button 
             onClick={() => setShowAddInput(true)}
-            className="flex items-center gap-3 text-stone-500 hover:text-stone-900 dark:hover:text-stone-300 transition-colors py-2 group"
+            className="flex min-h-11 items-center gap-3 text-stone-500 hover:text-stone-900 dark:hover:text-stone-300 transition-colors py-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400/60 rounded-md"
           >
             <Plus size={18} className="group-hover:scale-110 transition-transform" />
             <span className="font-sans font-medium text-sm tracking-widest uppercase">Add Habit</span>
@@ -183,7 +226,7 @@ export default function HabitList({
               disabled={isAdding || !newHabitName.trim()}
               className="text-sm font-sans tracking-widest uppercase font-medium text-stone-800 dark:text-stone-200 disabled:opacity-30 transition-colors"
             >
-              Save
+              {isAdding ? "Saving" : "Save"}
             </button>
             <button 
               onClick={() => setShowAddInput(false)}

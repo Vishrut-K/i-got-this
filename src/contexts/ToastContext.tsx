@@ -33,8 +33,12 @@ export function ToastProviderCore({ children }: { children: ReactNode }) {
   }, []);
 
   const addToast = useCallback((message: string, type: ToastType, onConfirm?: () => void, onCancel?: () => void) => {
-    const id = Math.random().toString(36).substring(2, 9);
-    setToasts((prev) => [...prev, { id, message, type, onConfirm, onCancel }]);
+    const id = crypto.randomUUID ? crypto.randomUUID() : Date.now().toString() + Math.random().toString();
+    setToasts((prev) => {
+      const newToasts = [...prev, { id, message, type, onConfirm, onCancel }];
+      // Keep only the 3 most recent toasts
+      return newToasts.length > 3 ? newToasts.slice(newToasts.length - 3) : newToasts;
+    });
     
     // Auto remove after 4 seconds only if not confirm
     if (type !== "confirm") {

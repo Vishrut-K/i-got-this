@@ -9,7 +9,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { saveJournalEntry } from '@/server/actions'
 
 export default function JournalEditor({ initialContent, date }: { initialContent: string, date: string }) {
-  const [status, setStatus] = useState<"saved" | "saving">("saved");
+  const [status, setStatus] = useState<"saved" | "saving" | "error">("saved");
   
   // Rotating prompts
   const prompts = useMemo(() => [
@@ -66,9 +66,7 @@ export default function JournalEditor({ initialContent, date }: { initialContent
         setLastSavedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       } catch (e) {
         console.error("Failed to save journal", e);
-        setStatus("saving"); // Keep status in non-saved state
-        // Optionally show toast error if we had toast imported, 
-        // but for now setting it back to 'saving' prevents silent failure feeling
+        setStatus("error"); // Prevent infinite loop by not setting back to "saving"
       }
     }, 1500);
 
@@ -91,6 +89,8 @@ export default function JournalEditor({ initialContent, date }: { initialContent
       <div className="flex justify-end text-[10px] font-medium text-stone-400 dark:text-stone-500 transition-opacity items-center gap-1.5 mb-4 h-3">
         {status === "saving" ? (
           "Saving..."
+        ) : status === "error" ? (
+          <span className="text-red-500 font-bold">Failed to save</span>
         ) : (
           <>
             <span className="text-emerald-600 dark:text-emerald-500 font-bold">✓ Saved</span>

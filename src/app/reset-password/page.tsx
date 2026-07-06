@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useState, Suspense } from "react";
 import { resetPassword } from "@/lib/auth-client";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -34,7 +35,7 @@ function ResetPasswordForm() {
       });
       
       if (error) {
-        toast.error(error.message);
+        toast.error(error.message || "An error occurred");
       } else {
         toast.success("Password updated successfully! You can now log in.");
         router.push("/login");
@@ -49,9 +50,8 @@ function ResetPasswordForm() {
       
       <div className="w-full max-w-[380px] relative z-10 flex flex-col justify-center">
         
-        {/* Logo */}
         <div className="w-full flex justify-center mb-8 animate-fade-up delay-0">
-          <img src="/logo.png" alt="I-got-this Logo" className="w-12 h-12 object-contain grayscale opacity-90 dark:invert rounded-[12px] overflow-hidden" />
+          <Image src="/logo.png" alt="I-got-this Logo" width={48} height={48} className="w-12 h-12 object-contain grayscale opacity-90 dark:invert rounded-[12px] overflow-hidden" priority unoptimized />
         </div>
 
         {/* Heading & Subtitle */}

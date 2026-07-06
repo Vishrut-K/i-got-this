@@ -63,6 +63,15 @@ export default async function TodayPage() {
     }
   });
   
+  let insightText = "Every master was once a beginner. Start small today.";
+  if (percentage === 100 && eligibleHabitsCount > 0) {
+    insightText = "A perfect day. You are mastering your environment.";
+  } else if (percentage >= 50) {
+    insightText = "Good progress today. Keep the momentum going.";
+  } else if (eligibleHabitsCount === 0) {
+    insightText = "A day of rest is just as important as a day of work.";
+  }
+
   return (
     <main className="max-w-7xl mx-auto px-8 pb-8 pt-0 flex flex-col space-y-3">
       
@@ -85,7 +94,7 @@ export default async function TodayPage() {
             Today's Habits
           </h2>
           <span className="text-[10px] font-medium tracking-widest uppercase text-stone-800 dark:text-stone-200 bg-stone-200 dark:bg-stone-800 px-2 py-1 rounded">
-            TODAY • {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+            TODAY • {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: tz })}
           </span>
         </div>
         
@@ -117,7 +126,7 @@ export default async function TodayPage() {
             Insight
           </h2>
           <div className="pl-4 border-l-2 border-stone-300 dark:border-stone-700 italic text-stone-600 dark:text-stone-400 text-sm">
-            "You are forming a powerful pattern. Keep going."
+            "{insightText}"
           </div>
         </section>
       </div>

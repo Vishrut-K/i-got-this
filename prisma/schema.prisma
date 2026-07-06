@@ -50,10 +50,12 @@ model Habit {
   color      String    @default("stone")
   archivedAt DateTime?
   userId     String
-  user       User      @relation(fields: [userId], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   logs       HabitLog[]
+
+  @@index([userId])
 }
 
 model HabitLog {
@@ -64,6 +66,9 @@ model HabitLog {
   habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([habitId, date])
+  @@index([habitId, date])
 }
 
 model Session {

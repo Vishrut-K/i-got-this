@@ -1,9 +1,7 @@
-import Link from "next/link";
 import "./globals.css";
 import { Providers } from "@/components/providers";
-import LogoutButton from "@/components/LogoutButton";
 import { Lora, Inter } from "next/font/google";
-import Grainient from "@/components/Grainient";
+
 import Navbar from "@/components/Navbar";
 import TimezoneProvider from "@/components/providers/TimezoneProvider";
 
@@ -34,6 +32,11 @@ const PremiumPaperBackground = () => (
   </div>
 );
 
+export const metadata = {
+  title: "I-got-this",
+  description: "A calm operating system for daily habits, reflection, and personal momentum.",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -49,10 +52,7 @@ export default function RootLayout({
           <Providers>
             <ToastProvider>
               <Navbar />
-              {/* --- NAVBAR ENDS HERE --- */}
-
-              {/* This is where your page content goes! */}
-              <div className="pt-2 relative z-10">
+              <div className="pt-2 relative z-10 pb-24 md:pb-0">
                 {children}
               </div>
             </ToastProvider>

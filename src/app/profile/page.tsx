@@ -2,6 +2,7 @@ import { getUserProfile } from "@/server/actions";
 import ProfileForm from "@/components/profile/ProfileForm";
 import DangerZone from "@/components/profile/DangerZone";
 import Link from "next/link";
+import Image from "next/image";
 import { Download, Upload, Server, ArrowRight } from "lucide-react";
 
 export const metadata = {
@@ -10,6 +11,10 @@ export const metadata = {
 
 export default async function ProfilePage() {
   const { user, stats } = await getUserProfile();
+
+  if (!user) {
+    return null;
+  }
 
   // Parse Member Since
   const memberSince = new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
@@ -29,7 +34,7 @@ export default async function ProfilePage() {
       <section className="flex flex-col items-center mb-16">
         <div className="w-20 h-20 rounded-full bg-stone-200 dark:bg-stone-800 mb-4 flex items-center justify-center overflow-hidden">
           {user.image ? (
-            <img src={user.image} alt={user.name || "Avatar"} className="w-full h-full object-cover" />
+            <Image src={user.image} alt={user.name || "Avatar"} width={80} height={80} className="w-full h-full object-cover" unoptimized />
           ) : (
             <span className="text-2xl font-serif text-stone-500">
               {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
@@ -133,7 +138,7 @@ export default async function ProfilePage() {
         </h2>
         <div className="flex flex-col sm:flex-row justify-between text-sm text-stone-500 gap-4">
           <div className="flex gap-6">
-            <span>I-got-this v2.0</span>
+            <span>I-got-this v1.0</span>
             <span>Made by Vishrut</span>
           </div>
           <div className="flex gap-6">

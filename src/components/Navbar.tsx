@@ -6,8 +6,7 @@ import { usePathname } from "next/navigation";
 export default function Navbar() {
   const pathname = usePathname();
   
-  // TEACHING MOMENT: Conditional Rendering
-  if (pathname === "/login") return null;
+  if (pathname === "/login" || pathname === "/signup" || pathname === "/reset-password") return null;
 
   return (
     <>
@@ -56,6 +55,8 @@ function NavLink({ href, current, children }: { href: string; current: string; c
   return (
     <Link 
       href={href} 
+      prefetch
+      aria-current={isActive ? "page" : undefined}
       className={`text-xs tracking-widest uppercase transition-colors ${
         isActive 
           ? "text-stone-900 font-bold dark:text-stone-100" 
