@@ -8,6 +8,11 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY || "dummy_key");
 
 export const auth = betterAuth({
+    baseURL: process.env.BETTER_AUTH_URL,
+    trustedOrigins: [
+        "http://localhost:3000",
+        "https://i-got-this-tracker.vercel.app",
+    ],
     database: prismaAdapter(prisma, {
         provider: "postgresql",
     }),
