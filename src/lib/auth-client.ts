@@ -8,5 +8,11 @@ export const authClient = createAuthClient({
 })
 
 export const { signIn, signUp, signOut, useSession } = authClient;
-export const forgetPassword = (authClient as any).forgetPassword;
-export const resetPassword = (authClient as any).resetPassword;
+
+type AuthClientExt = {
+    forgetPassword: (opts: { email: string; redirectTo: string }) => Promise<{ data: unknown; error: unknown }>;
+    resetPassword: (opts: { newPassword: string }) => Promise<{ data: unknown; error: unknown }>;
+};
+
+export const forgetPassword = (authClient as unknown as AuthClientExt).forgetPassword;
+export const resetPassword = (authClient as unknown as AuthClientExt).resetPassword;

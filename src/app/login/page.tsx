@@ -75,8 +75,8 @@ function LoginContent() {
         provider: "google",
         callbackURL: "/"
       });
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred during Google sign in");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "An error occurred during Google sign in");
       setIsGoogleLoading(false);
     }
   };

@@ -9,7 +9,7 @@ export function calculateStreaks(habitId: string, logs: HabitLog[], todayStr: st
   let bestStreak = 0;
 
   const today = new Date(todayStr);
-  let checkDate = new Date(today);
+  const checkDate = new Date(today);
 
   // 1. Calculate Current Streak (Walking backwards from today)
   let loops = 0;
@@ -37,7 +37,7 @@ export function calculateStreaks(habitId: string, logs: HabitLog[], todayStr: st
   let tempStreak = 0;
   if (habitLogs.length > 0) {
     const firstDate = new Date(habitLogs[0].date);
-    let iterDate = new Date(firstDate);
+    const iterDate = new Date(firstDate);
     
     while (iterDate <= today) {
       const dateStr = iterDate.toISOString().split("T")[0];
@@ -60,7 +60,7 @@ export function calculateStreaks(habitId: string, logs: HabitLog[], todayStr: st
   return { currentStreak, bestStreak };
 }
 
-export function calculateTodayProgress(habits: any[], todayLogs: HabitLog[]) {
+export function calculateTodayProgress(habits: { archivedAt: Date | null }[], todayLogs: HabitLog[]) {
   const activeHabits = habits.filter(h => !h.archivedAt);
   
   // Rule: SKIP removes the habit from today's math entirely.

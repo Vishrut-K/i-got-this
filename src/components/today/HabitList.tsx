@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition, useOptimistic } from "react";
-import { useRouter } from "next/navigation";
+
 import { addHabit, toggleHabitStatus, archiveHabit, updateHabitName } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
 import { Plus } from "lucide-react";
@@ -16,7 +16,7 @@ export default function HabitList({
 }: {
   habits: Habit[], allLogs: HabitLog[], last7Days: string[]
 }) {
-  const router = useRouter();
+
   const [newHabitName, setNewHabitName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [showAddInput, setShowAddInput] = useState(false);
@@ -24,7 +24,7 @@ export default function HabitList({
   const [errorMessage, setErrorMessage] = useState("");
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [editHabitName, setEditHabitName] = useState("");
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
 
   const [optimisticHabits, addOptimisticHabit] = useOptimistic(
     habits,
@@ -308,7 +308,7 @@ export default function HabitList({
         {!showAddInput ? (
           <button 
             onClick={() => setShowAddInput(true)}
-            className="flex min-h-11 items-center gap-3 text-stone-500 hover:text-stone-900 dark:hover:text-stone-300 transition-colors py-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone-400/60 rounded-md"
+            className="flex min-h-11 items-center gap-3 text-theme-accent hover:opacity-80 transition-opacity py-2 group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-theme-accent/60 rounded-md"
           >
             <Plus size={18} className="group-hover:scale-110 transition-transform" />
             <span className="font-sans font-medium text-sm tracking-widest uppercase">Add Habit</span>
@@ -330,7 +330,7 @@ export default function HabitList({
             <button 
               onClick={handleAdd}
               disabled={isAdding || !newHabitName.trim()}
-              className="text-sm font-sans tracking-widest uppercase font-medium text-stone-800 dark:text-stone-200 disabled:opacity-30 transition-colors"
+              className="text-sm font-sans tracking-widest uppercase font-bold text-theme-accent hover:opacity-80 disabled:opacity-30 transition-opacity"
             >
               {isAdding ? "Saving" : "Save"}
             </button>

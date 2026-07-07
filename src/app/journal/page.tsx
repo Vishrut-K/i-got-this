@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { getLocalTodayStr } from "@/lib/date";
 import JournalHeader from "@/components/journal/JournalHeader";
 import JournalEditor from "@/components/journal/JournalEditor";
-import { Circle, Activity } from "lucide-react";
+
 
 export const metadata = {
   title: "Journal | I-got-this",

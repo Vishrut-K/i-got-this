@@ -39,7 +39,7 @@ export default function Navbar() {
             {session?.user?.isAnonymous && (
               <Link 
                 href="/login?upgrade=true"
-                className="hidden md:flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-950/30 px-3 py-1.5 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+                className="hidden md:flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-white bg-theme-accent px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
               >
                 <Save size={12} strokeWidth={2.5} />
                 Save Account

@@ -139,7 +139,7 @@ export async function archiveHabit(habitId: string) {
   return { ok: true };
 }
 
-export async function saveJournalEntry(date: string, content: string, tasks: any = []) {
+export async function saveJournalEntry(date: string, content: string, tasks: unknown = []) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
@@ -192,7 +192,7 @@ export async function clearJournalEntry(date: string) {
         tasks: []
       }
     });
-  } catch (e) {
+  } catch {
     // Ignore P2025 error if no entry exists
   }
 }
@@ -387,12 +387,11 @@ export async function getJourneyStats() {
 // STEP 10: THE PROFILE & PREFERENCES
 // ==========================================
 
-export async function updateUserPreferences(data: any) {
+export async function updateUserPreferences(data: Record<string, unknown>) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
   const allowedFields = [
-    "currentGoal",
     "weekStartsOn",
     "productiveThreshold",
     "timeFormat",
@@ -406,7 +405,7 @@ export async function updateUserPreferences(data: any) {
     "monthlySummary"
   ];
 
-  const safeData: any = {};
+  const safeData: Record<string, unknown> = {};
   for (const field of allowedFields) {
     if (data[field] !== undefined) {
       safeData[field] = data[field];
@@ -442,7 +441,6 @@ export async function getUserProfile() {
   });
 
   // Calculate stats
-  let totalCompletions = 0;
   const daysMap = new Map<string, { done: number, total: number }>();
   
   allLogs.forEach(log => {
@@ -453,7 +451,6 @@ export async function getUserProfile() {
     
     const dayStats = daysMap.get(log.date)!;
     if (log.status === "DONE") {
-      totalCompletions++;
       dayStats.done++;
     }
   });
@@ -585,6 +582,35 @@ export async function deleteHabitForever(habitId: string) {
 
   await prisma.habit.delete({
     where: { id: habitId, userId: session.user.id }
+  });
+  revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  revalidatePath("/profile/archive");
+  return { ok: true };
+}
+
+export async function restoreAllArchivedHabits() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  await prisma.habit.updateMany({
+    where: { userId: session.user.id, archivedAt: { not: null } },
+    data: { archivedAt: null }
+  });
+  revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  revalidatePath("/profile/archive");
+  return { ok: true };
+}
+
+export async function deleteAllArchivedHabits() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  await prisma.habit.deleteMany({
+    where: { userId: session.user.id, archivedAt: { not: null } }
   });
   revalidatePath("/");
   revalidatePath("/journey");

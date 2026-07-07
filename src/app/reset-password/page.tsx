@@ -60,7 +60,7 @@ function ResetPasswordForm() {
             Set new password.
           </h1>
           <p className="text-[13px] text-stone-500 mt-2 animate-fade-up delay-200">
-            Make sure it's a strong one.
+            Make sure it&apos;s a strong one.
           </p>
         </div>
 

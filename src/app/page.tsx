@@ -1,13 +1,13 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { headers, cookies } from "next/headers";
 import prisma from "@/lib/prisma"; 
 import { cookies } from "next/headers";
 import { getLast7DaysStr } from "@/lib/date";
 
 // Import components
 import TodayHeader from "@/components/today/TodayHeader";
-import TodayStats from "@/components/today/TodayStats";
+
 import HabitList from "@/components/today/HabitList";
 import QuoteSection from "@/components/today/QuoteSection";
 import NotesPreview from "@/components/today/NotesPreview";
@@ -54,7 +54,7 @@ export default async function TodayPage() {
   const todayLogs = allLogs.filter(l => l.date === todayStr);
 
   // Calculate true progress using the new "SKIP is neutral" rules
-  const { doneCount, eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
+  const { eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
 
   // Fetch yesterday's journal
   const yesterdayStr = last7Days[5];
@@ -86,7 +86,7 @@ export default async function TodayPage() {
       <section className="pt-1">
         <div className="flex justify-between items-end mb-2">
           <h2 className="text-[10px] tracking-widest uppercase text-stone-400 font-semibold">
-            Today's Habits
+            Today&apos;s Habits
           </h2>
           <span className="text-[10px] font-medium tracking-widest uppercase text-stone-800 dark:text-stone-200 bg-stone-200 dark:bg-stone-800 px-2 py-1 rounded">
             TODAY • {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: tz })}
@@ -108,7 +108,7 @@ export default async function TodayPage() {
         {/* 5. Journal Preview */}
         <section>
           <h2 className="text-[10px] tracking-widest uppercase text-stone-400 mb-4 font-semibold">
-            Today's Journal
+            Today&apos;s Journal
           </h2>
           <NotesPreview 
             yesterdayContent={yesterdayJournal?.content || null} 
@@ -121,7 +121,7 @@ export default async function TodayPage() {
             Insight
           </h2>
           <div className="pl-4 border-l-2 border-stone-300 dark:border-stone-700 italic text-stone-600 dark:text-stone-400 text-sm">
-            "{insightText}"
+            &quot;{insightText}&quot;
           </div>
         </section>
       </div>

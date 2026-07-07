@@ -78,6 +78,7 @@ export default function JournalEditor({ initialContent, date }: { initialContent
     if (editor && editor.getHTML() !== initialContent) {
       editor.commands.setContent(initialContent);
       contentRef.current = initialContent;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setStatus("saved");
     }
   }, [date, initialContent, editor]);

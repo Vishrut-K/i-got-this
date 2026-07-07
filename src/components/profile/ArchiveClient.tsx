@@ -1,8 +1,8 @@
 "use client";
 
 import { useTransition } from "react";
-import * as Icons from "lucide-react";
-import { restoreHabit, deleteHabitForever } from "@/server/actions";
+
+import { restoreHabit, deleteHabitForever, restoreAllArchivedHabits, deleteAllArchivedHabits } from "@/server/actions";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/contexts/ToastContext";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
@@ -27,7 +27,7 @@ export default function ArchiveClient({ initialHabits }: { initialHabits: Habit[
         await restoreHabit(habitId);
         toast.success("Habit restored");
         router.refresh();
-      } catch (e) {
+      } catch {
         toast.error("Failed to restore habit");
       }
     });
@@ -43,8 +43,51 @@ export default function ArchiveClient({ initialHabits }: { initialHabits: Habit[
     );
   };
 
+  const handleRestoreAll = () => {
+    startTransition(async () => {
+      try {
+        await restoreAllArchivedHabits();
+        toast.success("All habits restored");
+        router.refresh();
+      } catch {
+        toast.error("Failed to restore habits");
+      }
+    });
+  };
+
+  const handleDeleteAll = () => {
+    toast.confirm(
+      "Are you sure you want to permanently delete ALL archived habits and their history? This cannot be undone.",
+      async () => {
+        await deleteAllArchivedHabits();
+        router.refresh();
+      }
+    );
+  };
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      
+      {initialHabits.length > 1 && (
+        <div className="flex justify-end items-center gap-4">
+          <button
+            onClick={handleRestoreAll}
+            disabled={isPending}
+            className="text-xs font-semibold uppercase tracking-widest text-stone-500 hover:text-stone-900 dark:hover:text-stone-300 transition-colors"
+          >
+            Restore All
+          </button>
+          <button
+            onClick={handleDeleteAll}
+            disabled={isPending}
+            className="text-xs font-semibold uppercase tracking-widest text-red-500 hover:text-red-700 transition-colors"
+          >
+            Delete All
+          </button>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-4">
       {initialHabits.map((habit) => {
         const IconComponent = ICONS[habit.iconId as IconId] || ICONS.activity;
         const colorClass = COLORS[habit.color as ColorId] || COLORS.stone;
@@ -91,6 +134,7 @@ export default function ArchiveClient({ initialHabits }: { initialHabits: Habit[
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

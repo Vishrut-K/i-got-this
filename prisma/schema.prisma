@@ -24,7 +24,6 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   // Preferences
-  currentGoal         String?
   weekStartsOn        String    @default("Monday")
   productiveThreshold Int       @default(70)
   timeFormat          String    @default("12h")

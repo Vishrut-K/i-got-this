@@ -8,15 +8,14 @@ export default function TodayHeader({ name }: { name: string | null }) {
   const [time, setTime] = useState<string>("");
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(name ? name.split(" ")[0] : "Friend");
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const toast = useToast();
 
   useEffect(() => {
     // 1. Set the live clock
-    setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    const interval = setInterval(() => {
-      setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-    }, 1000);
+    const updateTime = () => setTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    updateTime(); // initial set
+    const interval = setInterval(updateTime, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -41,7 +40,7 @@ export default function TodayHeader({ name }: { name: string | null }) {
     startTransition(async () => {
       try {
         await updateUserName(newName);
-      } catch (err: any) {
+      } catch {
         toast.error("Failed to update name.");
         setEditName(firstName);
       }

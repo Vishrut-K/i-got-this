@@ -15,14 +15,14 @@ export default function LandingPage() {
   const handleStartAnonymous = async () => {
     setIsStarting(true);
     try {
-      const { data, error } = await signIn.anonymous();
+      const { error } = await signIn.anonymous();
       if (error) {
         throw new Error(error.message || "Failed to start session");
       }
       // Successful anonymous login, redirect to dashboard by refreshing the page
       router.refresh();
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Something went wrong.");
       setIsStarting(false);
     }
   };
@@ -45,14 +45,14 @@ export default function LandingPage() {
       </h1>
       
       <p className="text-stone-500 dark:text-stone-400 text-lg md:text-xl font-sans font-light max-w-xl mx-auto mb-12 leading-relaxed">
-        A calm operating system for daily momentum. No setup required. Start tracking instantly and sync when you're ready.
+        A calm operating system for daily momentum. No setup required. Start tracking instantly and sync when you&apos;re ready.
       </p>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-md">
         <button
           onClick={handleStartAnonymous}
           disabled={isStarting}
-          className="group relative flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-stone-800 hover:bg-stone-900 dark:bg-stone-200 dark:hover:bg-white text-stone-100 dark:text-stone-900 rounded-lg text-sm font-semibold tracking-wider uppercase transition-all overflow-hidden"
+          className="group relative flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-3.5 bg-theme-accent text-white hover:opacity-90 rounded-lg text-sm font-semibold tracking-wider uppercase transition-all overflow-hidden"
         >
           {isStarting ? (
             <div className="w-5 h-5 border-2 border-stone-400 border-t-white dark:border-stone-400 dark:border-t-stone-800 rounded-full animate-spin"></div>
