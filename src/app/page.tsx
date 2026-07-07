@@ -1,8 +1,6 @@
 import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
 import { headers, cookies } from "next/headers";
 import prisma from "@/lib/prisma"; 
-import { cookies } from "next/headers";
 import { getLast7DaysStr } from "@/lib/date";
 
 // Import components
