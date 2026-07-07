@@ -6,7 +6,7 @@ import { Pencil } from "lucide-react";
 import { updateUserName } from "@/server/actions";
 import { useToast } from "@/contexts/ToastContext";
 
-export default function ProfileIdentity({ user, memberSince }: { user: { name: string | null, email: string, image: string | null }, memberSince: string }) {
+export default function ProfileIdentity({ user, memberSince }: { user: { name: string | null, email: string | null, image: string | null }, memberSince: string }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(user.name || "");
   const [isPending, startTransition] = useTransition();
@@ -35,7 +35,7 @@ export default function ProfileIdentity({ user, memberSince }: { user: { name: s
           <Image src={user.image} alt={user.name || "Avatar"} width={80} height={80} className="w-full h-full object-cover" unoptimized />
         ) : (
           <span className="text-2xl font-serif text-stone-500">
-            {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+            {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase() || "?"}
           </span>
         )}
       </div>
