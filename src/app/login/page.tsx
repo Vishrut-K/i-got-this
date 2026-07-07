@@ -94,7 +94,7 @@ function LoginContent() {
         redirectTo: "/reset-password",
       });
       if (error) {
-        toast.error(error.message || "An error occurred");
+        toast.error((error as Error).message || "An error occurred");
       } else {
         toast.success("If an account exists, a password reset link has been sent to your email.");
         setIsForgotPassword(false);
