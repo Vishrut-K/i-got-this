@@ -42,7 +42,7 @@ export default function HabitMatrix({ habits, matrixDays, habitMatrixData }: Hab
         {/* Habit Rows */}
         <div className="flex flex-col gap-3">
           {habits.map((habit) => {
-            const Icon = (Icons as Record<string, React.ElementType>)[habit.iconId] || Icons.Circle;
+            const Icon = (Icons as unknown as Record<string, React.ElementType>)[habit.iconId] || Icons.Circle;
             
             return (
               <div key={habit.id} className="flex items-center group">

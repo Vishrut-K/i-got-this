@@ -19,7 +19,7 @@ export default function HabitStatsCard({
   totalCompletions,
   completionRate
 }: HabitStatsCardProps) {
-  const Icon = (Icons as Record<string, React.ElementType>)[iconId] || Icons.Circle;
+  const Icon = (Icons as unknown as Record<string, React.ElementType>)[iconId] || Icons.Circle;
 
   return (
     <div className="flex flex-col p-4 rounded-xl border border-stone-200/50 dark:border-stone-800/50 bg-[#F4F4F0]/30 dark:bg-[#1A1A18]/30">
