@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
 import { addHabit, toggleHabitStatus, archiveHabit } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
@@ -23,15 +23,43 @@ export default function HabitList({
   const [errorMessage, setErrorMessage] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  const activeHabits = habits.filter(h => !h.archivedAt);
+  const [optimisticHabits, addOptimisticHabit] = useOptimistic(
+    habits,
+    (state, action: { type: 'ADD', habit: Habit } | { type: 'ARCHIVE', id: string }) => {
+      if (action.type === 'ADD') {
+        return [...state, action.habit];
+      }
+      if (action.type === 'ARCHIVE') {
+        return state.map(h => h.id === action.id ? { ...h, archivedAt: new Date() } : h);
+      }
+      return state;
+    }
+  );
+
+  const [optimisticLogs, addOptimisticLog] = useOptimistic(
+    allLogs,
+    (state, action: { type: 'UPDATE', log: HabitLog }) => {
+      if (action.type === 'UPDATE') {
+        const existing = state.findIndex(l => l.habitId === action.log.habitId && l.date === action.log.date);
+        if (existing >= 0) {
+          const nextState = [...state];
+          nextState[existing] = action.log;
+          return nextState;
+        }
+        return [...state, action.log];
+      }
+      return state;
+    }
+  );
+
+  const activeHabits = optimisticHabits.filter(h => !h.archivedAt);
   const todayStr = last7Days[6];
 
   const getStatus = (habitId: string, date: string) => {
-    return allLogs.find((l) => l.habitId === habitId && l.date === date)?.status || "EMPTY";
+    return optimisticLogs.find((l) => l.habitId === habitId && l.date === date)?.status || "EMPTY";
   };
 
   const handleToggleToday = async (habitId: string) => {
-    if (isPending) return;
     const current = getStatus(habitId, todayStr);
     let next = "DONE";
     if (current === "DONE") next = "SKIP";
@@ -41,10 +69,14 @@ export default function HabitList({
     setTimeout(() => setAnimatingId(null), 200); 
 
     setErrorMessage("");
+    
+    // Immediately update UI optimistically
+    addOptimisticLog({ type: 'UPDATE', log: { habitId, date: todayStr, status: next } });
+
     startTransition(async () => {
       try {
         await toggleHabitStatus(habitId, todayStr, next);
-        router.refresh();
+        // Server action calls revalidatePath, which will sync real state automatically
       } catch {
         setErrorMessage("That change did not save. Please try again.");
       }
@@ -53,27 +85,39 @@ export default function HabitList({
 
   const handleAdd = async () => {
     if (!newHabitName.trim()) return;
+    const nameToSave = newHabitName.trim();
     setIsAdding(true);
     setErrorMessage("");
-    try {
-      await addHabit(newHabitName.trim(), "activity", "stone");
-      setNewHabitName("");
-      setShowAddInput(false);
-      router.refresh();
-    } catch {
-      setErrorMessage("Your habit could not be saved. Please try again.");
-    } finally {
-      setIsAdding(false);
-    }
+
+    // Optimistically add to UI
+    addOptimisticHabit({ 
+      type: 'ADD', 
+      habit: { id: `temp-${Date.now()}`, name: nameToSave, iconId: "activity", color: "stone", archivedAt: null } 
+    });
+    
+    setNewHabitName("");
+    setShowAddInput(false);
+
+    startTransition(async () => {
+      try {
+        await addHabit(nameToSave, "activity", "stone");
+      } catch {
+        setErrorMessage("Your habit could not be saved. Please try again.");
+      } finally {
+        setIsAdding(false);
+      }
+    });
   };
 
   const handleArchive = (habitId: string) => {
-    if (isPending) return;
     setErrorMessage("");
+    
+    // Optimistically remove from UI
+    addOptimisticHabit({ type: 'ARCHIVE', id: habitId });
+
     startTransition(async () => {
       try {
         await archiveHabit(habitId);
-        router.refresh();
       } catch {
         setErrorMessage("That habit could not be archived. Please try again.");
       }
@@ -118,7 +162,7 @@ export default function HabitList({
         const colorClass = COLORS[habit.color as ColorId] || COLORS.stone;
         
         // Progress Engine Math
-        const { currentStreak } = calculateStreaks(habit.id, allLogs, todayStr);
+        const { currentStreak } = calculateStreaks(habit.id, optimisticLogs, todayStr);
         
         return (
           <div key={habit.id} className="relative group">
@@ -148,7 +192,6 @@ export default function HabitList({
                       <button
                         key={dateStr}
                         onClick={() => handleToggleToday(habit.id)}
-                        disabled={isPending}
                         aria-label={`Toggle habit ${habit.name} for today`}
                         className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 border-2
                           ${isAnimating ? "scale-125" : "scale-100"} 
@@ -180,7 +223,6 @@ export default function HabitList({
               <div className="col-span-2 flex items-center justify-end gap-4 pr-4">
                 <button 
                   onClick={() => handleArchive(habit.id)}
-                  disabled={isPending}
                   aria-label={`Archive habit ${habit.name}`}
                   className="text-xs font-sans uppercase tracking-widest text-stone-400 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:text-red-500 disabled:opacity-30"
                 >
