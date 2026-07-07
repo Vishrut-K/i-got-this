@@ -21,14 +21,11 @@ const PremiumPaperBackground = () => (
     {/* Layer 3: Edge Darkening (Vignette) */}
     <div className="absolute inset-0 shadow-[inset_0_0_120px_rgba(150,140,120,0.15)] dark:shadow-[inset_0_0_120px_rgba(0,0,0,0.8)]" />
 
-    {/* Layer 4: Micro SVG Noise (Organic Paper Grain) */}
-    <svg className="absolute inset-0 w-full h-full opacity-[0.25] dark:opacity-[0.12] mix-blend-multiply dark:mix-blend-overlay">
-      <filter id="paper-noise">
-        <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="3" stitchTiles="stitch" />
-        <feColorMatrix type="saturate" values="0" />
-      </filter>
-      <rect width="100%" height="100%" filter="url(#paper-noise)" />
-    </svg>
+    {/* Layer 4: Micro SVG Noise (Organic Paper Grain) - Optimized using static background image */}
+    <div 
+      className="absolute inset-0 opacity-[0.25] dark:opacity-[0.12] mix-blend-multiply dark:mix-blend-overlay"
+      style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.75%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3CfeColorMatrix type=%22saturate%22 values=%220%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}
+    />
   </div>
 );
 
