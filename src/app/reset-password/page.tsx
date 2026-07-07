@@ -31,7 +31,6 @@ function ResetPasswordForm() {
     try {
       const { error } = await resetPassword({
         newPassword: password,
-        token: token,
       });
       
       if (error) {
