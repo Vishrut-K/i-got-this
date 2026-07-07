@@ -28,7 +28,7 @@ export default function TodayStats({
       {/* 2. Thin Progress Bar */}
       <div className="flex-1 h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden">
         <div 
-          className={`h-full transition-all duration-1000 ease-out rounded-full ${
+          className={`h-full transition-all duration-500 ease-out rounded-full ${
             isProductive ? "bg-[#4A6750] dark:bg-[#5C7E63]" : "bg-[#A96455] dark:bg-[#C27A68]"
           }`}
           style={{ width: `${progressPercentage}%` }}

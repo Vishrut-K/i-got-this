@@ -68,7 +68,7 @@ export default function JournalEditor({ initialContent, date }: { initialContent
         console.error("Failed to save journal", e);
         setStatus("error"); // Prevent infinite loop by not setting back to "saving"
       }
-    }, 1500);
+    }, 2000);
 
     return () => clearTimeout(timeoutId);
   }, [status, date]);

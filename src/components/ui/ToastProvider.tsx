@@ -35,15 +35,17 @@ function ToastContainer() {
                 {toast.message}
               </p>
               
-              <button 
-                onClick={() => {
-                  toast.onCancel?.();
-                  removeToast(toast.id);
-                }}
-                className="shrink-0 text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300 transition-colors"
-              >
-                <X className="w-4 h-4 mt-0.5" />
-              </button>
+              {toast.type !== "confirm" && (
+                <button 
+                  onClick={() => {
+                    toast.onCancel?.();
+                    removeToast(toast.id);
+                  }}
+                  className="shrink-0 text-stone-400 hover:text-stone-700 dark:text-stone-500 dark:hover:text-stone-300 transition-colors"
+                >
+                  <X className="w-4 h-4 mt-0.5" />
+                </button>
+              )}
             </div>
             
             {toast.type === "confirm" && (

@@ -5,15 +5,16 @@ import { useRouter } from "next/navigation";
 import { addHabit, toggleHabitStatus, archiveHabit } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
 import { Plus } from "lucide-react";
-import { calculateStreaks } from "@/lib/progress";
+import { calculateStreaks, calculateTodayProgress } from "@/lib/progress";
+import TodayStats from "@/components/today/TodayStats";
 
 type Habit = { id: string; name: string; iconId: string; color: string; archivedAt: Date | null };
 type HabitLog = { habitId: string; status: string; date: string };
 
 export default function HabitList({
-  habits, allLogs, last7Days
+  habits, allLogs, last7Days, todayFormatted
 }: {
-  habits: Habit[], allLogs: HabitLog[], last7Days: string[]
+  habits: Habit[], allLogs: HabitLog[], last7Days: string[], todayFormatted?: string
 }) {
   const router = useRouter();
   const [newHabitName, setNewHabitName] = useState("");
@@ -58,6 +59,9 @@ export default function HabitList({
   const getStatus = (habitId: string, date: string) => {
     return optimisticLogs.find((l) => l.habitId === habitId && l.date === date)?.status || "EMPTY";
   };
+
+  const todayLogs = optimisticLogs.filter(l => l.date === todayStr);
+  const { doneCount, eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
 
   const handleToggleToday = async (habitId: string) => {
     const current = getStatus(habitId, todayStr);
@@ -127,7 +131,28 @@ export default function HabitList({
   const dayNames = last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0));
 
   return (
-    <div className="space-y-1">
+    <div className="flex flex-col">
+      <section className="mb-6">
+        <TodayStats 
+          completedCount={doneCount} 
+          totalCount={eligibleHabitsCount} 
+          percentageOverride={percentage}
+        />
+      </section>
+
+      <section className="pt-1">
+        {todayFormatted && (
+          <div className="flex justify-between items-end mb-2">
+            <h2 className="text-[10px] tracking-widest uppercase text-stone-400 font-semibold">
+              Today's Habits
+            </h2>
+            <span className="text-[10px] font-medium tracking-widest uppercase text-stone-800 dark:text-stone-200 bg-stone-200 dark:bg-stone-800 px-2 py-1 rounded">
+              TODAY • {todayFormatted}
+            </span>
+          </div>
+        )}
+        
+        <div className="space-y-1">
       {activeHabits.length === 0 && !showAddInput && (
         <div className="text-stone-500 italic py-4">
           Start with one quiet commitment. You can always adjust it later.
@@ -279,6 +304,8 @@ export default function HabitList({
           </div>
         )}
       </div>
+      </div>
+      </section>
     </div>
   );
 }

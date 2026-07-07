@@ -11,7 +11,6 @@ import TodayStats from "@/components/today/TodayStats";
 import HabitList from "@/components/today/HabitList";
 import QuoteSection from "@/components/today/QuoteSection";
 import NotesPreview from "@/components/today/NotesPreview";
-import { calculateTodayProgress } from "@/lib/progress";
 
 export const metadata = {
   title: "Today | I-got-this",
@@ -51,8 +50,14 @@ export default async function TodayPage() {
   // Filter logs for today
   const todayLogs = allLogs.filter(l => l.date === todayStr);
 
-  // Calculate true progress using the new "SKIP is neutral" rules
-  const { doneCount, eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
+  // We still need percentage to determine insightText
+  const activeHabitsCount = activeHabits.length;
+  const skippedCount = todayLogs.filter(log => log.status === "SKIP").length;
+  const doneCount = todayLogs.filter(log => log.status === "DONE").length;
+  const eligibleHabitsCount = activeHabitsCount - skippedCount;
+  const percentage = eligibleHabitsCount === 0 
+    ? (doneCount > 0 ? 100 : 0) 
+    : Math.round((doneCount / eligibleHabitsCount) * 100);
 
   // Fetch yesterday's journal
   const yesterdayStr = last7Days[5];
@@ -78,32 +83,13 @@ export default async function TodayPage() {
       {/* 1. Header */}
       <TodayHeader name={session.user.name} />
 
-      {/* 2. Hero Progress Card */}
-      <section>
-        <TodayStats 
-          completedCount={doneCount} 
-          totalCount={eligibleHabitsCount} 
-          percentageOverride={percentage}
-        />
-      </section>
-
-      {/* 3. The Core Action: Habits */}
-      <section className="pt-1">
-        <div className="flex justify-between items-end mb-2">
-          <h2 className="text-[10px] tracking-widest uppercase text-stone-400 font-semibold">
-            Today's Habits
-          </h2>
-          <span className="text-[10px] font-medium tracking-widest uppercase text-stone-800 dark:text-stone-200 bg-stone-200 dark:bg-stone-800 px-2 py-1 rounded">
-            TODAY • {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: tz })}
-          </span>
-        </div>
-        
-        <HabitList 
-          habits={habits} 
-          allLogs={allLogs} 
-          last7Days={last7Days}
-        />
-      </section>
+      {/* 2 & 3. Hero Progress Card & Habits (Now unified to share optimistic state) */}
+      <HabitList 
+        habits={habits} 
+        allLogs={allLogs} 
+        last7Days={last7Days}
+        todayFormatted={new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', timeZone: tz })}
+      />
 
       {/* Grid for bottom elements to save vertical space! */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">

@@ -3,15 +3,19 @@
 import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Search, HelpCircle, Trash2 } from "lucide-react";
 import { clearJournalEntry } from "@/server/actions";
+import { useTransition } from "react";
 
 import { useToast } from "@/contexts/ToastContext";
 
 export default function JournalHeader({ currentDate, isToday }: { currentDate: string, isToday?: boolean }) {
   const router = useRouter();
   const toast = useToast();
+  const [isPending, startTransition] = useTransition();
 
   const handleDateChange = (date: string) => {
-    router.push(`/journal?date=${date}`);
+    startTransition(() => {
+      router.push(`/journal?date=${date}`);
+    });
   };
 
   const shiftDate = (days: number) => {
@@ -31,7 +35,8 @@ export default function JournalHeader({ currentDate, isToday }: { currentDate: s
   });
 
   return (
-    <div className="flex items-center justify-between mb-2 py-2 border-b border-stone-200/50 dark:border-stone-800/50 relative z-10">
+    <>
+    <div className={`flex items-center justify-between mb-2 py-2 border-b border-stone-200/50 dark:border-stone-800/50 relative z-10 transition-opacity duration-300 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       
       {/* Date & Today Badge */}
       <div className="flex items-center gap-3">
@@ -116,5 +121,12 @@ export default function JournalHeader({ currentDate, isToday }: { currentDate: s
 
       </div>
     </div>
+    
+    {isPending && (
+      <div className="fixed top-[45%] left-1/2 -translate-x-1/2 z-50 pointer-events-none">
+        <div className="w-5 h-5 border-2 border-stone-300 dark:border-stone-700 border-t-stone-800 dark:border-t-stone-200 rounded-full animate-spin opacity-70"></div>
+      </div>
+    )}
+    </>
   );
 }
