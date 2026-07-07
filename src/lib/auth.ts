@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import prisma from "./prisma";
 import { dash } from "@better-auth/infra";
+import { anonymous } from "better-auth/plugins";
 import { Resend } from "resend";
 
 // Resend initialization (API Key should be in .env)
@@ -37,5 +38,5 @@ export const auth = betterAuth({
             }
         }
     },
-    plugins: [dash()]
+    plugins: [dash(), anonymous()]
 });

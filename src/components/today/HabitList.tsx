@@ -2,10 +2,11 @@
 
 import { useState, useTransition, useOptimistic } from "react";
 import { useRouter } from "next/navigation";
-import { addHabit, toggleHabitStatus, archiveHabit } from "@/server/actions";
+import { addHabit, toggleHabitStatus, archiveHabit, updateHabitName } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
 import { Plus } from "lucide-react";
-import { calculateStreaks } from "@/lib/progress";
+import { calculateStreaks, calculateTodayProgress } from "@/lib/progress";
+import TodayStats from "./TodayStats";
 
 type Habit = { id: string; name: string; iconId: string; color: string; archivedAt: Date | null };
 type HabitLog = { habitId: string; status: string; date: string };
@@ -21,16 +22,21 @@ export default function HabitList({
   const [showAddInput, setShowAddInput] = useState(false);
   const [animatingId, setAnimatingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
+  const [editHabitName, setEditHabitName] = useState("");
   const [isPending, startTransition] = useTransition();
 
   const [optimisticHabits, addOptimisticHabit] = useOptimistic(
     habits,
-    (state, action: { type: 'ADD', habit: Habit } | { type: 'ARCHIVE', id: string }) => {
+    (state, action: { type: 'ADD', habit: Habit } | { type: 'ARCHIVE', id: string } | { type: 'UPDATE_NAME', id: string, name: string }) => {
       if (action.type === 'ADD') {
         return [...state, action.habit];
       }
       if (action.type === 'ARCHIVE') {
         return state.map(h => h.id === action.id ? { ...h, archivedAt: new Date() } : h);
+      }
+      if (action.type === 'UPDATE_NAME') {
+        return state.map(h => h.id === action.id ? { ...h, name: action.name } : h);
       }
       return state;
     }
@@ -70,10 +76,10 @@ export default function HabitList({
 
     setErrorMessage("");
     
-    // Immediately update UI optimistically
-    addOptimisticLog({ type: 'UPDATE', log: { habitId, date: todayStr, status: next } });
-
     startTransition(async () => {
+      // Immediately update UI optimistically inside transition
+      addOptimisticLog({ type: 'UPDATE', log: { habitId, date: todayStr, status: next } });
+
       try {
         await toggleHabitStatus(habitId, todayStr, next);
         // Server action calls revalidatePath, which will sync real state automatically
@@ -89,16 +95,16 @@ export default function HabitList({
     setIsAdding(true);
     setErrorMessage("");
 
-    // Optimistically add to UI
-    addOptimisticHabit({ 
-      type: 'ADD', 
-      habit: { id: `temp-${Date.now()}`, name: nameToSave, iconId: "activity", color: "stone", archivedAt: null } 
-    });
-    
     setNewHabitName("");
     setShowAddInput(false);
 
     startTransition(async () => {
+      // Optimistically add to UI
+      addOptimisticHabit({ 
+        type: 'ADD', 
+        habit: { id: `temp-${Date.now()}`, name: nameToSave, iconId: "activity", color: "stone", archivedAt: null } 
+      });
+
       try {
         await addHabit(nameToSave, "activity", "stone");
       } catch {
@@ -112,10 +118,10 @@ export default function HabitList({
   const handleArchive = (habitId: string) => {
     setErrorMessage("");
     
-    // Optimistically remove from UI
-    addOptimisticHabit({ type: 'ARCHIVE', id: habitId });
-
     startTransition(async () => {
+      // Optimistically remove from UI
+      addOptimisticHabit({ type: 'ARCHIVE', id: habitId });
+
       try {
         await archiveHabit(habitId);
       } catch {
@@ -124,10 +130,41 @@ export default function HabitList({
     });
   };
 
+  const handleRename = (habitId: string) => {
+    if (!editHabitName.trim()) {
+      setEditingHabitId(null);
+      return;
+    }
+    const nameToSave = editHabitName.trim();
+    setErrorMessage("");
+
+    startTransition(async () => {
+      addOptimisticHabit({ type: 'UPDATE_NAME', id: habitId, name: nameToSave });
+      setEditingHabitId(null);
+      
+      try {
+        await updateHabitName(habitId, nameToSave);
+      } catch {
+        setErrorMessage("Could not rename habit. Please try again.");
+      }
+    });
+  };
+
   const dayNames = last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0));
+
+  const todayLogs = optimisticLogs.filter(l => l.date === todayStr);
+  const { doneCount, eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
 
   return (
     <div className="space-y-1">
+      <section className="mb-8">
+        <TodayStats 
+          completedCount={doneCount} 
+          totalCount={eligibleHabitsCount} 
+          percentageOverride={percentage}
+        />
+      </section>
+
       {activeHabits.length === 0 && !showAddInput && (
         <div className="text-stone-500 italic py-4">
           Start with one quiet commitment. You can always adjust it later.
@@ -173,12 +210,27 @@ export default function HabitList({
               
               {/* 1. Left: Icon and Name */}
               <div className={`col-span-4 flex items-center gap-2.5 transition-colors ${todayStatus === "SKIP" ? "opacity-30" : ""}`}>
-                <div className={`p-1 rounded-md ${colorClass}`}>
+                <div className={`p-1 rounded-md ${colorClass} shrink-0`}>
                   <IconComponent size={16} strokeWidth={2.5} />
                 </div>
-                <span className={`text-lg font-serif tracking-wide truncate ${todayStatus === "SKIP" ? "line-through decoration-stone-300" : "text-stone-800 dark:text-stone-200"}`}>
-                  {habit.name}
-                </span>
+                {editingHabitId === habit.id ? (
+                  <input 
+                    type="text"
+                    autoFocus
+                    value={editHabitName}
+                    onChange={(e) => setEditHabitName(e.target.value)}
+                    onBlur={() => handleRename(habit.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRename(habit.id);
+                      if (e.key === "Escape") setEditingHabitId(null);
+                    }}
+                    className="w-full bg-transparent border-b border-stone-400 dark:border-stone-600 outline-none font-serif text-lg text-stone-800 dark:text-stone-200"
+                  />
+                ) : (
+                  <span className={`text-lg font-serif tracking-wide truncate ${todayStatus === "SKIP" ? "line-through decoration-stone-300" : "text-stone-800 dark:text-stone-200"}`}>
+                    {habit.name}
+                  </span>
+                )}
               </div>
               
               {/* 2. Middle: The 7-Day Timeline with Inline Checkbox */}
@@ -220,15 +272,27 @@ export default function HabitList({
               </div>
 
               {/* 3. Right: Streak & Actions */}
-              <div className="col-span-2 flex items-center justify-end gap-4 pr-4">
-                <button 
-                  onClick={() => handleArchive(habit.id)}
-                  aria-label={`Archive habit ${habit.name}`}
-                  className="text-xs font-sans uppercase tracking-widest text-stone-400 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:text-red-500 disabled:opacity-30"
-                >
-                  Archive
-                </button>
-                <div className="flex items-center gap-1.5 text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors">
+              <div className="col-span-2 flex items-center justify-end gap-2 pr-4">
+                <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={() => {
+                      setEditHabitName(habit.name);
+                      setEditingHabitId(habit.id);
+                    }}
+                    aria-label={`Edit habit ${habit.name}`}
+                    className="text-xs font-sans uppercase tracking-widest text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    onClick={() => handleArchive(habit.id)}
+                    aria-label={`Archive habit ${habit.name}`}
+                    className="text-xs font-sans uppercase tracking-widest text-stone-400 hover:text-red-500 disabled:opacity-30 transition-colors"
+                  >
+                    Archive
+                  </button>
+                </div>
+                <div className="flex items-center gap-1.5 text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors ml-2">
                   <span className="text-sm">🔥</span>
                   <span className="font-medium text-sm tracking-widest uppercase">{currentStreak}</span>
                 </div>

@@ -18,7 +18,7 @@ export default async function JournalPage(
   const session = await auth.api.getSession({ headers: await headers() });
   
   if (!session) {
-    redirect("/login");
+    redirect("/");
   }
 
   // Get the date to display (defaults to today in local timezone)

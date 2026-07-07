@@ -3,11 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { useSession } from "@/lib/auth-client";
+import { Save } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { data: session } = useSession();
   
   if (pathname === "/login" || pathname === "/signup" || pathname === "/reset-password") return null;
+  if (pathname === "/" && !session) return null;
 
   return (
     <>
@@ -31,9 +35,16 @@ export default function Navbar() {
             </span>
           </div>
 
-          {/* Right Column: Empty for now (Logout and Search moved to Profile/Journal) */}
-          <div className="flex justify-end items-center gap-6">
-            {/* Keeping this div to maintain the 3-column CSS Grid alignment */}
+          <div className="flex justify-end items-center gap-2 md:gap-4">
+            {session?.user?.isAnonymous && (
+              <Link 
+                href="/login?upgrade=true"
+                className="hidden md:flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase text-orange-600 bg-orange-100 dark:text-orange-400 dark:bg-orange-950/30 px-3 py-1.5 rounded-full hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+              >
+                <Save size={12} strokeWidth={2.5} />
+                Save Account
+              </Link>
+            )}
           </div>
         </div>
       </nav>

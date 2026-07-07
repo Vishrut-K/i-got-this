@@ -40,6 +40,43 @@ export async function addHabit(name: string, iconId: string, color: string) {
   return { ok: true, habitId: habit.id };
 }
 
+export async function updateHabitName(habitId: string, newName: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  if (typeof newName !== "string" || newName.length > 100 || newName.trim().length === 0) {
+    throw new Error("Invalid name");
+  }
+
+  await prisma.habit.update({
+    where: { id: habitId, userId: session.user.id },
+    data: { name: newName.trim() }
+  });
+
+  revalidatePath("/");
+  revalidatePath("/journey");
+  revalidatePath("/profile");
+  return { ok: true };
+}
+
+export async function updateUserName(newName: string) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) throw new Error("Not logged in!");
+
+  if (typeof newName !== "string" || newName.length > 100 || newName.trim().length === 0) {
+    throw new Error("Invalid name");
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { name: newName.trim() }
+  });
+
+  revalidatePath("/");
+  revalidatePath("/profile");
+  return { ok: true };
+}
+
 export async function toggleHabitStatus(habitId: string, day: string, newStatus: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");

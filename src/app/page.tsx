@@ -17,11 +17,13 @@ export const metadata = {
   title: "Today | I-got-this",
 };
 
+import LandingPage from "@/components/landing/LandingPage";
+
 export default async function TodayPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   
   if (!session) {
-    redirect("/login");
+    return <LandingPage />;
   }
 
   // Fetch habits
@@ -78,14 +80,7 @@ export default async function TodayPage() {
       {/* 1. Header */}
       <TodayHeader name={session.user.name} />
 
-      {/* 2. Hero Progress Card */}
-      <section>
-        <TodayStats 
-          completedCount={doneCount} 
-          totalCount={eligibleHabitsCount} 
-          percentageOverride={percentage}
-        />
-      </section>
+      {/* 2. Hero Progress Card (Moved to HabitList for instant optimistic updates) */}
 
       {/* 3. The Core Action: Habits */}
       <section className="pt-1">
