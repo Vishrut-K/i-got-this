@@ -139,7 +139,8 @@ export async function archiveHabit(habitId: string) {
   return { ok: true };
 }
 
-export async function saveJournalEntry(date: string, content: string, tasks: unknown = []) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function saveJournalEntry(date: string, content: string, tasks: any = []) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
 
