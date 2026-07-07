@@ -34,7 +34,7 @@ function ResetPasswordForm() {
       });
       
       if (error) {
-        toast.error(error.message || "An error occurred");
+        toast.error((error as Error).message || "An error occurred");
       } else {
         toast.success("Password updated successfully! You can now log in.");
         router.push("/login");
