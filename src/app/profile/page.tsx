@@ -1,9 +1,10 @@
 import { getUserProfile } from "@/server/actions";
 import ProfileForm from "@/components/profile/ProfileForm";
 import DangerZone from "@/components/profile/DangerZone";
+import ProfileIdentity from "@/components/profile/ProfileIdentity";
 import Link from "next/link";
-import Image from "next/image";
-import { Download, Upload, Server, ArrowRight } from "lucide-react";
+
+import { Server, ArrowRight } from "lucide-react";
 
 export const metadata = {
   title: "Profile | I-got-this",
@@ -31,20 +32,7 @@ export default async function ProfilePage() {
       </header>
 
       {/* 2. Identity Block */}
-      <section className="flex flex-col items-center mb-16">
-        <div className="w-20 h-20 rounded-full bg-stone-200 dark:bg-stone-800 mb-4 flex items-center justify-center overflow-hidden">
-          {user.image ? (
-            <Image src={user.image} alt={user.name || "Avatar"} width={80} height={80} className="w-full h-full object-cover" unoptimized />
-          ) : (
-            <span className="text-2xl font-serif text-stone-500">
-              {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-            </span>
-          )}
-        </div>
-        <h2 className="text-2xl font-serif font-bold text-stone-900 dark:text-stone-100">{user.name || "Anonymous"}</h2>
-        <p className="text-sm text-stone-500 mb-1">{user.email}</p>
-        <p className="text-xs text-stone-400">Member Since {memberSince}</p>
-      </section>
+      <ProfileIdentity user={user} memberSince={memberSince} />
 
       {/* 3. Lifetime Summary */}
       <section className="mb-16">

@@ -15,15 +15,15 @@ datasource db {
 
 model User {
   id            String    @id @default(cuid())
-  email         String    @unique
+  email         String?   @unique
   name          String?
   emailVerified Boolean   @default(false)
   image         String?
+  isAnonymous   Boolean?  @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Preferences
-  currentGoal         String?
   weekStartsOn        String    @default("Monday")
   productiveThreshold Int       @default(70)
   timeFormat          String    @default("12h")

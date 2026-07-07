@@ -3,17 +3,30 @@
 import Image from "next/image";
 import { useState, useRef, useEffect } from "react";
 import { signIn, signUp, forgetPassword } from "@/lib/auth-client";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/contexts/ToastContext";
+import { Suspense } from "react";
+import { useSession } from "@/lib/auth-client";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
   
+  const searchParams = useSearchParams();
+  const isUpgrading = searchParams.get("upgrade") === "true";
+  
+  const { data: session, isPending } = useSession();
+
+  useEffect(() => {
+    if (!isPending && session && !session.user.isAnonymous) {
+      router.replace("/");
+    }
+  }, [session, isPending, router]);
+
   // State
-  const [isSignUp, setIsSignUp] = useState(pathname === "/signup");
+  const [isSignUp, setIsSignUp] = useState(pathname === "/signup" || isUpgrading);
   const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -62,8 +75,8 @@ export default function LoginPage() {
         provider: "google",
         callbackURL: "/"
       });
-    } catch (error: any) {
-      toast.error(error.message || "An error occurred during Google sign in");
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "An error occurred during Google sign in");
       setIsGoogleLoading(false);
     }
   };
@@ -100,6 +113,16 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E')" }}></div>
       </div>
 
+      {/* Back Button */}
+      <div className="absolute top-6 left-6 z-20 animate-fade-up delay-0">
+        <button 
+          onClick={() => router.push('/')}
+          className="text-[13px] font-medium text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1"
+        >
+          ← Back
+        </button>
+      </div>
+
       {/* Main Content */}
       <main className="w-full max-w-[380px] flex flex-col z-10 pt-4 pb-12">
         
@@ -110,10 +133,10 @@ export default function LoginPage() {
         {/* Heading & Subtitle */}
         <div className="text-center mb-8">
           <h1 className="text-[26px] font-serif tracking-tight text-stone-900 animate-fade-up delay-100">
-            {isForgotPassword ? "Reset password." : (isSignUp ? "Begin your story." : "Welcome back.")}
+            {isForgotPassword ? "Reset password." : (isUpgrading ? "Save your progress." : (isSignUp ? "Begin your story." : "Welcome back."))}
           </h1>
           <p className="text-[13px] text-stone-500 mt-2 animate-fade-up delay-200">
-            {isForgotPassword ? "We'll send you a link to get back in." : (isSignUp ? "Your future self is waiting." : "Continue becoming.")}
+            {isForgotPassword ? "We'll send you a link to get back in." : (isUpgrading ? "Create an account to sync your habits across devices." : (isSignUp ? "Your future self is waiting." : "Your momentum awaits."))}
           </p>
         </div>
 
@@ -305,5 +328,13 @@ export default function LoginPage() {
       </footer>
 
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="flex h-screen items-center justify-center bg-[#F4F1EE]">Loading...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 const fs = require('fs');
 const b64 = fs.readFileSync('public/logo.png', 'base64');
 const svg = `<svg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'>

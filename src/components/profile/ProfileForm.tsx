@@ -7,17 +7,18 @@ import { updateUserPreferences } from "@/server/actions";
 import { authClient } from "@/lib/auth-client";
 import { LogOut } from "lucide-react";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export default function ProfileForm({ user }: { user: any }) {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
   // Local state for optimistic updates
-  const [goal, setGoal] = useState(user.currentGoal || "");
   const [prefs, setPrefs] = useState({
     weekStartsOn: user.weekStartsOn,
     productiveThreshold: user.productiveThreshold,
@@ -32,23 +33,14 @@ export default function ProfileForm({ user }: { user: any }) {
     monthlySummary: user.monthlySummary,
   });
 
-  const [isSaving, setIsSaving] = useState(false);
 
-  const handleUpdate = async (field: string, value: any) => {
+
+  const handleUpdate = async (field: string, value: unknown) => {
     const newPrefs = { ...prefs, [field]: value };
     setPrefs(newPrefs);
     
     // Sync to backend
-    setIsSaving(true);
     await updateUserPreferences({ [field]: value });
-    setIsSaving(false);
-    router.refresh();
-  };
-
-  const handleGoalSave = async () => {
-    setIsSaving(true);
-    await updateUserPreferences({ currentGoal: goal });
-    setIsSaving(false);
     router.refresh();
   };
 
@@ -70,24 +62,6 @@ export default function ProfileForm({ user }: { user: any }) {
           Sign Out
         </button>
       </div>
-
-      {/* 1. Current Goal */}
-      <section>
-        <h2 className="text-[11px] font-sans tracking-[0.15em] uppercase text-stone-500 font-bold mb-6 flex items-center gap-4">
-          Current Goal
-          <div className="flex-1 h-px bg-stone-200/50 dark:bg-stone-800/50"></div>
-        </h2>
-        <div className="relative">
-          <textarea
-            value={goal}
-            onChange={(e) => setGoal(e.target.value)}
-            onBlur={handleGoalSave}
-            placeholder="e.g. Become consistent. Run a half marathon."
-            className="w-full bg-transparent text-3xl font-serif text-stone-800 dark:text-stone-200 placeholder:text-stone-300 dark:placeholder:text-stone-700 resize-none outline-none focus:ring-0 p-0"
-            rows={2}
-          />
-        </div>
-      </section>
 
       {/* 2. Appearance */}
       <section>
@@ -186,15 +160,11 @@ export default function ProfileForm({ user }: { user: any }) {
           <div className="flex flex-col gap-6">
             <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-stone-800/50 pb-4">
               <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Daily Quote</span>
-              <button onClick={() => handleUpdate('dailyQuote', !prefs.dailyQuote)} className="text-sm font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
-                {prefs.dailyQuote ? "On" : "Off"}
-              </button>
+              <ToggleSwitch checked={prefs.dailyQuote} onChange={(val) => handleUpdate('dailyQuote', val)} />
             </div>
             <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-stone-800/50 pb-4">
               <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Autosave</span>
-              <button onClick={() => handleUpdate('autosave', !prefs.autosave)} className="text-sm font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
-                {prefs.autosave ? "On" : "Off"}
-              </button>
+              <ToggleSwitch checked={prefs.autosave} onChange={(val) => handleUpdate('autosave', val)} />
             </div>
             <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-stone-800/50 pb-4 relative z-20">
               <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Font Size</span>
@@ -210,9 +180,7 @@ export default function ProfileForm({ user }: { user: any }) {
           <div className="flex flex-col gap-6">
             <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-stone-800/50 pb-4">
               <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Daily Reminder</span>
-              <button onClick={() => handleUpdate('dailyReminder', !prefs.dailyReminder)} className="text-sm font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
-                {prefs.dailyReminder ? "On" : "Off"}
-              </button>
+              <ToggleSwitch checked={prefs.dailyReminder} onChange={(val) => handleUpdate('dailyReminder', val)} />
             </div>
             <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-stone-800/50 pb-4 relative z-20">
               <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Weekly Review</span>
@@ -224,9 +192,7 @@ export default function ProfileForm({ user }: { user: any }) {
             </div>
             <div className="flex justify-between items-center border-b border-stone-200/50 dark:border-stone-800/50 pb-4">
               <span className="text-sm font-medium text-stone-700 dark:text-stone-300">Monthly Summary</span>
-              <button onClick={() => handleUpdate('monthlySummary', !prefs.monthlySummary)} className="text-sm font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors">
-                {prefs.monthlySummary ? "On" : "Off"}
-              </button>
+              <ToggleSwitch checked={prefs.monthlySummary} onChange={(val) => handleUpdate('monthlySummary', val)} />
             </div>
           </div>
 
@@ -237,21 +203,38 @@ export default function ProfileForm({ user }: { user: any }) {
   );
 }
 
+function ToggleSwitch({ checked, onChange }: { checked: boolean, onChange: (val: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-accent focus:ring-offset-2 dark:focus:ring-offset-stone-900 ${
+        checked ? 'bg-theme-accent' : 'bg-stone-300 dark:bg-stone-700'
+      }`}
+    >
+      <span
+        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+          checked ? 'translate-x-6' : 'translate-x-1'
+        }`}
+      />
+    </button>
+  );
+}
+
 function CustomSelect({ value, options, onChange, displaySuffix = "" }: { value: string, options: string[], onChange: (val: string) => void, displaySuffix?: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="relative">
+    <div className="relative z-50">
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 text-sm font-medium text-stone-500 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+        className="flex items-center justify-between w-32 px-3 py-2 text-sm font-medium text-stone-700 dark:text-stone-300 bg-stone-100 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-800 transition-colors focus:outline-none focus:ring-2 focus:ring-theme-accent"
       >
-        {value}{displaySuffix}
-        <svg className="w-3 h-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+        <span>{value}{displaySuffix}</span>
+        <svg className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-32 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg shadow-xl overflow-hidden py-1 z-50">
+        <div className="absolute right-0 top-full mt-2 w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-lg shadow-xl overflow-hidden py-1 z-50 animate-in fade-in slide-in-from-top-2">
           {options.map((opt) => (
             <button
               key={opt}
@@ -261,7 +244,7 @@ function CustomSelect({ value, options, onChange, displaySuffix = "" }: { value:
               }}
               className={`w-full text-left px-4 py-2 text-sm transition-colors ${
                 value === opt 
-                  ? "bg-stone-100 dark:bg-stone-800 text-stone-900 dark:text-stone-100 font-medium" 
+                  ? "bg-stone-100 dark:bg-stone-800 text-theme-accent font-bold" 
                   : "text-stone-600 dark:text-stone-400 hover:bg-stone-50 dark:hover:bg-stone-800"
               }`}
             >

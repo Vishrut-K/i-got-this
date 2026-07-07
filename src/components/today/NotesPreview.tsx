@@ -17,7 +17,7 @@ export default function NotesPreview({ yesterdayContent }: { yesterdayContent: s
         )}
         
         <p className="font-serif text-xl text-stone-700 dark:text-stone-300 italic mb-4 leading-relaxed">
-          "{previewText}"
+          &quot;{previewText}&quot;
         </p>
         
         <div className="text-sm font-sans font-medium text-stone-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-stone-800 dark:group-hover:text-stone-200 group-hover:gap-3 transition-all">

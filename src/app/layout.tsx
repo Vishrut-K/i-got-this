@@ -5,6 +5,8 @@ import { Lora, Inter } from "next/font/google";
 import Navbar from "@/components/Navbar";
 import TimezoneProvider from "@/components/providers/TimezoneProvider";
 
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 
 const lora = Lora({ subsets: ["latin"], variable: "--font-serif" });
@@ -34,14 +36,26 @@ export const metadata = {
   description: "A calm operating system for daily habits, reflection, and personal momentum.",
 };
 
-export default function RootLayout({
+import prisma from "@/lib/prisma";
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth.api.getSession({ headers: await headers() });
+  
+  let accentTheme = "theme-stone";
+  if (session?.user) {
+    const user = await prisma.user.findUnique({ where: { id: session.user.id }, select: { accentColor: true } });
+    if (user?.accentColor) {
+      accentTheme = `theme-${user.accentColor}`;
+    }
+  }
+
   return (
     <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative overflow-y-scroll`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative overflow-y-scroll ${accentTheme}`}>
         
         <PremiumPaperBackground />
 

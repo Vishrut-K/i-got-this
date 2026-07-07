@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { deleteUserAccount } from "@/server/actions";
-import { useRouter } from "next/navigation";
+
 import { useToast } from "@/contexts/ToastContext";
 import { authClient } from "@/lib/auth-client";
 
@@ -10,7 +10,7 @@ export default function DangerZone() {
   const [step, setStep] = useState<"IDLE" | "CONFIRM">("IDLE");
   const [confirmText, setConfirmText] = useState("");
   const [isDeleting, setIsDeleting] = useState(false);
-  const router = useRouter();
+
   const toast = useToast();
 
   const handleDelete = async () => {
@@ -22,7 +22,7 @@ export default function DangerZone() {
       // Sign out on the client to clear the session cookie properly
       await authClient.signOut();
       window.location.href = "/login";
-    } catch (e) {
+    } catch {
       toast.error("Failed to delete account.");
       setIsDeleting(false);
     }

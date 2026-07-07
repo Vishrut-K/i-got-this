@@ -1,7 +1,7 @@
 import { getJourneyStats } from "@/server/actions";
 import JourneyHeatmap from "@/components/journey/JourneyHeatmap";
 import HabitStatsCard from "@/components/journey/HabitStatsCard";
-import { Award, CalendarDays, Download } from "lucide-react";
+import { Award, CalendarDays } from "lucide-react";
 
 export const metadata = {
   title: "Journey | I-got-this",

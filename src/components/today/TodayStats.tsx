@@ -1,4 +1,3 @@
-import { PRODUCTIVE_THRESHOLD } from "@/lib/constants";
 
 export default function TodayStats({
   completedCount,
@@ -10,8 +9,7 @@ export default function TodayStats({
   const defaultPercentage = totalCount === 0 ? 0 : Math.round((completedCount / totalCount) * 100);
   const progressPercentage = percentageOverride !== undefined ? percentageOverride : defaultPercentage;
   
-  const isProductive = progressPercentage >= PRODUCTIVE_THRESHOLD;
-
+  
   return (
     <div className="flex items-center gap-4 py-1">
       
@@ -28,9 +26,7 @@ export default function TodayStats({
       {/* 2. Thin Progress Bar */}
       <div className="flex-1 h-1 bg-stone-200 dark:bg-stone-800 rounded-full overflow-hidden">
         <div 
-          className={`h-full transition-all duration-500 ease-out rounded-full ${
-            isProductive ? "bg-[#4A6750] dark:bg-[#5C7E63]" : "bg-[#A96455] dark:bg-[#C27A68]"
-          }`}
+          className="h-full transition-all duration-200 ease-out rounded-full bg-theme-accent"
           style={{ width: `${progressPercentage}%` }}
         />
       </div>

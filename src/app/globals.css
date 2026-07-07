@@ -47,6 +47,7 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  --color-theme-accent: var(--theme-accent);
 }
 
 :root {
@@ -54,7 +55,19 @@
   --foreground: oklch(0.25 0.01 50); /* Soft Charcoal */
   --border: oklch(0.90 0.02 80);     /* Soft pencil line */
   --loader-stair: #d6d3d1;           /* Visible light gray */
+  
+  /* Theme Accents */
+  --theme-accent-stone: #78716c;
+  --theme-accent-olive: #5C7E63;
+  --theme-accent-terracotta: #C17767;
+  --theme-accent-sage: #84A59D;
+  --theme-accent: var(--theme-accent-stone);
 }
+
+.theme-olive { --theme-accent: var(--theme-accent-olive); }
+.theme-terracotta { --theme-accent: var(--theme-accent-terracotta); }
+.theme-sage { --theme-accent: var(--theme-accent-sage); }
+.theme-stone { --theme-accent: var(--theme-accent-stone); }
 
 .dark {
   --background: oklch(0.16 0.01 80); /* Warm Deep Charcoal / Stone */

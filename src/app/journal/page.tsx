@@ -5,7 +5,7 @@ import prisma from "@/lib/prisma";
 import { getLocalTodayStr } from "@/lib/date";
 import JournalHeader from "@/components/journal/JournalHeader";
 import JournalEditor from "@/components/journal/JournalEditor";
-import { Circle, Activity } from "lucide-react";
+
 
 export const metadata = {
   title: "Journal | I-got-this",
@@ -18,7 +18,7 @@ export default async function JournalPage(
   const session = await auth.api.getSession({ headers: await headers() });
   
   if (!session) {
-    redirect("/login");
+    redirect("/");
   }
 
   // Get the date to display (defaults to today in local timezone)

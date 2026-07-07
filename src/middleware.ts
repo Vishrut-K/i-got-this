@@ -8,10 +8,11 @@ export async function middleware(request: NextRequest) {
   
   const sessionCookie = request.cookies.get("better-auth.session_token") || request.cookies.get("__Secure-better-auth.session_token");
 
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+
   if (PUBLIC_ROUTES.some(r => pathname.startsWith(r))) {
-    if (sessionCookie && !pathname.startsWith('/api/auth')) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
     return NextResponse.next();
   }
   
