@@ -49,6 +49,27 @@ export default function Navbar() {
         </div>
       </nav>
 
+      {/* --- MOBILE TOP NAVBAR (For Save Button) --- */}
+      {session?.user?.isAnonymous && (
+        <nav className="md:hidden sticky top-0 w-full z-50 bg-[#F4F4F0]/80 dark:bg-[#1A1A18]/80 backdrop-blur-md border-b border-stone-200 dark:border-stone-800">
+          <div className="flex justify-between items-center px-4 py-2">
+            <div className="flex items-center gap-2">
+              <Image src="/logo.png" alt="Logo" width={20} height={20} className="w-5 h-5 object-contain grayscale opacity-90 rounded-full bg-white" unoptimized />
+              <span className="font-bold text-lg tracking-tight font-serif text-stone-800 dark:text-stone-200 select-none">
+                I-got-this
+              </span>
+            </div>
+            <Link 
+              href="/login?upgrade=true"
+              className="flex items-center gap-1 text-[10px] font-bold tracking-widest uppercase text-white bg-theme-accent px-3 py-1.5 rounded-full hover:opacity-90 transition-opacity"
+            >
+              <Save size={12} strokeWidth={2.5} />
+              Save Account
+            </Link>
+          </div>
+        </nav>
+      )}
+
       {/* --- MOBILE BOTTOM TAB BAR (Hidden on desktop) --- */}
       <nav className="md:hidden fixed bottom-0 w-full z-50 bg-[#F4F4F0]/90 dark:bg-[#1A1A18]/90 backdrop-blur-md border-t border-stone-200 dark:border-stone-800 pb-safe">
         <div className="flex justify-between items-center px-6 py-4">

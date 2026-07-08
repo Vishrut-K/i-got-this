@@ -52,20 +52,22 @@ export default function JourneyHeatmap({ data }: { data: Record<string, number> 
 
   return (
     <div className="flex flex-col w-full pb-2">
-      <div className="flex w-full gap-[2px] sm:gap-1">
-        {weeks.map((week, wIdx) => (
-          <div key={wIdx} className="flex flex-col gap-[2px] sm:gap-1 flex-1">
-            {week.map((day, dIdx) => (
-              <div 
-                key={dIdx} 
-                className={`w-full aspect-square rounded-sm sm:rounded-[3px] transition-colors ${getColorClass(day.score, day.isFuture)}`}
-                title={!day.isFuture ? `${day.date}` : undefined}
-              />
-            ))}
-          </div>
-        ))}
+      <div className="w-full overflow-x-auto overflow-y-hidden pb-4 scrollbar-thin scrollbar-thumb-stone-200 dark:scrollbar-thumb-stone-800">
+        <div className="flex gap-[2px] sm:gap-1 min-w-[700px] md:min-w-full">
+          {weeks.map((week, wIdx) => (
+            <div key={wIdx} className="flex flex-col gap-[2px] sm:gap-1 flex-1">
+              {week.map((day, dIdx) => (
+                <div 
+                  key={dIdx} 
+                  className={`w-full aspect-square rounded-sm sm:rounded-[3px] transition-colors ${getColorClass(day.score, day.isFuture)}`}
+                  title={!day.isFuture ? `${day.date}` : undefined}
+                />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="flex items-center gap-2 mt-6 text-[10px] uppercase tracking-widest font-semibold text-stone-400">
+      <div className="flex items-center gap-2 mt-2 text-[10px] uppercase tracking-widest font-semibold text-stone-400">
         <span>Less</span>
         <div className="flex gap-1">
           <div className="w-3 h-3 rounded-sm bg-stone-100 dark:bg-stone-800" />

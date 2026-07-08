@@ -4,7 +4,8 @@ import { useState, useTransition, useOptimistic } from "react";
 
 import { addHabit, toggleHabitStatus, archiveHabit, updateHabitName } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
-import { Plus, Edit2, Trash2 } from "lucide-react";
+import EmojiPicker, { Theme } from "emoji-picker-react";
+import { Plus, Edit2, Trash2, MoreVertical } from "lucide-react";
 import { calculateStreaks, calculateTodayProgress } from "@/lib/progress";
 import TodayStats from "./TodayStats";
 
@@ -20,10 +21,13 @@ export default function HabitList({
   const [newHabitName, setNewHabitName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [showAddInput, setShowAddInput] = useState(false);
+  const [newHabitIcon, setNewHabitIcon] = useState("✨");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [animatingId, setAnimatingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [editingHabitId, setEditingHabitId] = useState<string | null>(null);
   const [editHabitName, setEditHabitName] = useState("");
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
   const [optimisticHabits, addOptimisticHabit] = useOptimistic(
@@ -102,11 +106,11 @@ export default function HabitList({
       // Optimistically add to UI
       addOptimisticHabit({ 
         type: 'ADD', 
-        habit: { id: `temp-${Date.now()}`, name: nameToSave, iconId: "activity", color: "stone", archivedAt: null } 
+        habit: { id: `temp-${Date.now()}`, name: nameToSave, iconId: newHabitIcon, color: "stone", archivedAt: null } 
       });
 
       try {
-        await addHabit(nameToSave, "activity", "stone");
+        await addHabit(nameToSave, newHabitIcon, "stone");
       } catch {
         setErrorMessage("Your habit could not be saved. Please try again.");
       } finally {
@@ -190,31 +194,28 @@ export default function HabitList({
           
           {/* Grid Header */}
           <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-4 py-3 text-[10px] font-semibold tracking-[0.2em] uppercase text-stone-400 border-b border-stone-200/60 dark:border-stone-800/60 bg-stone-50/80 dark:bg-stone-900/40">
-            <div className="col-span-7 md:col-span-4">Habit</div>
+            <div className="col-span-6 md:col-span-4">Habit</div>
             
-            {/* Desktop 7-Days Header */}
-            <div className="hidden md:grid col-span-6 grid-cols-7 justify-items-center">
-              {dayData.map((day, i) => (
-                <div key={i} className={`flex flex-col items-center leading-tight gap-0.5 ${i === 6 ? "text-stone-800 dark:text-stone-200" : ""}`}>
-                  {i === 6 ? (
-                    <>
-                      <span className="font-bold">TOD</span>
-                      <span className="text-[9px] font-semibold">{day.num}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>{day.char}</span>
-                      <span className="text-[9px] opacity-70">{day.num}</span>
-                    </>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Mobile Today Header */}
-            <div className="md:hidden col-span-3 flex flex-col items-center leading-tight gap-0.5 text-stone-800 dark:text-stone-200">
-               <span className="font-bold">TOD</span>
-               <span className="text-[9px] font-semibold">{dayData[6].num}</span>
+            {/* 7-Days Header (Desktop shows 7, Mobile shows 3) */}
+            <div className="col-span-4 md:col-span-6 grid grid-cols-3 md:grid-cols-7 justify-items-center">
+              {dayData.map((day, i) => {
+                const isMobileVisible = i >= 4;
+                return (
+                  <div key={i} className={`flex-col items-center leading-tight gap-0.5 ${i === 6 ? "text-stone-800 dark:text-stone-200" : ""} ${isMobileVisible ? "flex" : "hidden md:flex"}`}>
+                    {i === 6 ? (
+                      <>
+                        <span className="font-bold">TOD</span>
+                        <span className="text-[9px] font-semibold">{day.num}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>{day.char}</span>
+                        <span className="text-[9px] opacity-70">{day.num}</span>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="col-span-2 text-right">Streak</div>
@@ -225,7 +226,7 @@ export default function HabitList({
             {activeHabits.map((habit) => {
         const todayStatus = getStatus(habit.id, todayStr);
         const isAnimating = animatingId === habit.id;
-        const IconComponent = ICONS[habit.iconId as IconId] || ICONS.activity;
+        const IconComponent = ICONS[habit.iconId as IconId];
         const colorClass = COLORS[habit.color as ColorId] || COLORS.stone;
         
         // Progress Engine Math
@@ -236,9 +237,13 @@ export default function HabitList({
             <div className="grid grid-cols-12 items-center gap-2 sm:gap-4 py-3 px-3 sm:px-4 hover:bg-stone-50/80 dark:hover:bg-stone-800/30 transition-colors duration-200">
               
               {/* Left: Icon and Name */}
-              <div className={`col-span-7 md:col-span-4 flex items-center gap-3 shrink-0 transition-colors ${todayStatus === "SKIP" ? "opacity-40" : ""}`}>
+              <div className={`col-span-6 md:col-span-4 flex items-center gap-3 shrink-0 transition-colors ${todayStatus === "SKIP" ? "opacity-40" : ""}`}>
                 <div className={`flex p-1.5 rounded-lg ${colorClass} shrink-0 items-center justify-center`}>
-                  <IconComponent size={14} strokeWidth={2.5} />
+                  {IconComponent ? (
+                    <IconComponent size={14} strokeWidth={2.5} />
+                  ) : (
+                    <span className="text-[14px] leading-none">{habit.iconId}</span>
+                  )}
                 </div>
                 {editingHabitId === habit.id ? (
                   <input 
@@ -260,15 +265,16 @@ export default function HabitList({
                 )}
               </div>
               
-              {/* Middle: 7-Day Timeline (Desktop Only) */}
-              <div className="hidden md:grid col-span-6 grid-cols-7 justify-items-center items-center">
+              {/* 7-Day Timeline (Desktop shows 7, Mobile shows 3) */}
+              <div className="col-span-4 md:col-span-6 grid grid-cols-3 md:grid-cols-7 justify-items-center items-center">
                 {last7Days.map((dateStr, idx) => {
                   const status = getStatus(habit.id, dateStr);
                   const isToday = idx === 6;
+                  const isMobileVisible = idx >= 4;
                   
-                  if (isToday) {
-                    return (
-                      <div key={dateStr} className="flex justify-center">
+                  return (
+                    <div key={dateStr} className={`justify-center ${isMobileVisible ? "flex" : "hidden md:flex"}`}>
+                      {isToday ? (
                         <button
                           onClick={() => handleToggleToday(habit.id)}
                           aria-label={`Toggle habit ${habit.name} for today`}
@@ -282,11 +288,7 @@ export default function HabitList({
                           {todayStatus === "DONE" && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
                           {todayStatus === "SKIP" && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>}
                         </button>
-                      </div>
-                    );
-                  } else {
-                    return (
-                      <div key={dateStr} className="flex justify-center">
+                      ) : (
                         <div 
                           className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-colors ${
                             status === "DONE" ? "bg-[#4A6750] dark:bg-[#5C7E63]" : 
@@ -294,34 +296,17 @@ export default function HabitList({
                             "bg-stone-200/50 dark:bg-stone-800"
                           }`} 
                         />
-                      </div>
-                    );
-                  }
+                      )}
+                    </div>
+                  );
                 })}
               </div>
 
-              {/* Mobile Today Checkbox */}
-              <div className="md:hidden col-span-3 flex justify-center items-center">
-                <button
-                  onClick={() => handleToggleToday(habit.id)}
-                  aria-label={`Toggle habit ${habit.name} for today`}
-                  className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-all duration-200 border-[1.5px] shadow-sm
-                    ${isAnimating ? "scale-110" : "scale-100"} 
-                    ${todayStatus === "DONE" ? "bg-[#4A6750] border-[#4A6750] text-white dark:bg-[#5C7E63] dark:border-[#5C7E63]" : ""}
-                    ${todayStatus === "SKIP" ? "bg-transparent border-stone-300 text-stone-400 dark:border-stone-600 dark:text-stone-500" : ""}
-                    ${todayStatus === "EMPTY" ? "border-[#A96455]/40 hover:border-[#A96455]/70 bg-transparent text-transparent dark:border-[#A96455]/50 dark:hover:border-[#A96455]/80" : ""}
-                  `}
-                >
-                  {todayStatus === "DONE" && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                  {todayStatus === "SKIP" && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>}
-                </button>
-              </div>
-
               {/* Right: Streak & Actions */}
-              <div className="col-span-2 flex items-center justify-end gap-3 shrink-0 relative">
+              <div className="col-span-2 flex items-center justify-end gap-1 sm:gap-3 shrink-0 relative">
                 
-                {/* Floating Actions on Hover */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-8 sm:right-12 bg-stone-100/90 dark:bg-stone-800/90 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm border border-stone-200/50 dark:border-stone-700/50">
+                {/* Desktop Floating Actions on Hover */}
+                <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-12 bg-stone-100/90 dark:bg-stone-800/90 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm border border-stone-200/50 dark:border-stone-700/50 z-10">
                   <button 
                     onClick={() => {
                       setEditHabitName(habit.name);
@@ -341,11 +326,37 @@ export default function HabitList({
                   </button>
                 </div>
 
+                {/* Mobile Menu Dropdown */}
+                {activeMenuId === habit.id && (
+                  <div className="sm:hidden absolute right-6 top-full mt-1 bg-white dark:bg-stone-800 shadow-lg border border-stone-200 dark:border-stone-700 rounded-md py-1 z-20 flex flex-col min-w-[100px]">
+                     <button 
+                       onClick={() => { setEditHabitName(habit.name); setEditingHabitId(habit.id); setActiveMenuId(null); }} 
+                       className="px-3 py-2 text-left text-xs font-semibold text-stone-600 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2"
+                     >
+                       <Edit2 size={12}/> Edit
+                     </button>
+                     <button 
+                       onClick={() => { handleArchive(habit.id); setActiveMenuId(null); }} 
+                       className="px-3 py-2 text-left text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-stone-100 dark:hover:bg-stone-700 flex items-center gap-2"
+                     >
+                       <Trash2 size={12}/> Delete
+                     </button>
+                  </div>
+                )}
+
                 {/* Streak */}
-                <div className={`flex items-center gap-1.5 text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors ${currentStreak > 0 ? "opacity-100" : "opacity-40"}`}>
+                <div className={`flex items-center gap-0.5 sm:gap-1.5 text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors ${currentStreak > 0 ? "opacity-100" : "opacity-40"}`}>
                   <span className="text-[12px] sm:text-[14px]">🔥</span>
                   <span className="font-semibold text-[13px] sm:text-[14px] tracking-widest">{currentStreak}</span>
                 </div>
+
+                {/* Mobile Menu Toggle Button */}
+                <button 
+                  className="sm:hidden p-1 text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+                  onClick={() => setActiveMenuId(activeMenuId === habit.id ? null : habit.id)}
+                >
+                  <MoreVertical size={14} />
+                </button>
               </div>
             </div>
           </div>
@@ -366,7 +377,30 @@ export default function HabitList({
             <span className="font-sans font-medium text-sm tracking-widest uppercase">Add Habit</span>
           </button>
         ) : (
-          <div className="flex items-center gap-4 py-2">
+          <div className="flex items-center gap-2 sm:gap-4 py-2 relative">
+            <button 
+              onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+              className="w-10 h-10 flex items-center justify-center text-xl bg-stone-100 dark:bg-stone-800 rounded-lg hover:bg-stone-200 dark:hover:bg-stone-700 transition-colors shrink-0"
+            >
+              {newHabitIcon}
+            </button>
+            
+            {showEmojiPicker && (
+              <div className="absolute top-12 left-0 z-50 shadow-xl rounded-xl">
+                <EmojiPicker 
+                  theme={Theme.AUTO} 
+                  onEmojiClick={(emoji) => {
+                    setNewHabitIcon(emoji.emoji);
+                    setShowEmojiPicker(false);
+                  }}
+                  previewConfig={{ showPreview: false }}
+                  skinTonesDisabled
+                  height={350}
+                  width={300}
+                />
+              </div>
+            )}
+
             <input
               type="text"
               autoFocus
