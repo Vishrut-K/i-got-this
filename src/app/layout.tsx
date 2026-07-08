@@ -75,7 +75,7 @@ export default async function RootLayout({
       <head>
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative overflow-y-scroll ${accentTheme}`}>
+      <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative overflow-y-scroll overflow-x-hidden ${accentTheme}`}>
         
         <PremiumPaperBackground />
 

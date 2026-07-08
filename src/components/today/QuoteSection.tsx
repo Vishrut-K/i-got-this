@@ -15,14 +15,14 @@ export default function QuoteSection() {
 
   return (
     <section>
-      <h2 className="text-xs tracking-widest uppercase text-stone-400 mb-6 font-semibold">
+      <h2 className="text-[10px] tracking-widest uppercase text-stone-400 mb-4 font-semibold">
         Thought of the Day
       </h2>
       <div className="pl-4 border-l-2 border-stone-300 dark:border-stone-700">
-        <p className="font-serif italic text-xl text-stone-700 dark:text-stone-300 leading-relaxed mb-2">
+        <p className="font-serif italic text-[15px] text-stone-700 dark:text-stone-300 leading-relaxed mb-2">
           &quot;{quote.text}&quot;
         </p>
-        <p className="text-sm font-sans tracking-widest uppercase text-stone-400 font-medium">
+        <p className="text-[10px] font-sans tracking-widest uppercase text-stone-400 font-medium">
           — {quote.author}
         </p>
       </div>

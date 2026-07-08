@@ -100,7 +100,7 @@ export default function JournalEditor({ initialContent, date }: { initialContent
         )}
       </div>
       
-      <div className="font-serif">
+      <div className="font-serif w-full max-w-full overflow-hidden break-words">
         <EditorContent editor={editor} />
       </div>
     </div>

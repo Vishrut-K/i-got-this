@@ -7,8 +7,7 @@ import { getLast7DaysStr } from "@/lib/date";
 import TodayHeader from "@/components/today/TodayHeader";
 
 import HabitList from "@/components/today/HabitList";
-import QuoteSection from "@/components/today/QuoteSection";
-import NotesPreview from "@/components/today/NotesPreview";
+// Removed QuoteSection and NotesPreview for a decluttered UI
 import { calculateTodayProgress } from "@/lib/progress";
 
 export const metadata = {
@@ -73,7 +72,7 @@ export default async function TodayPage() {
   }
 
   return (
-    <main className="max-w-7xl mx-auto px-8 pb-8 pt-0 flex flex-col space-y-3">
+    <main className="max-w-7xl mx-auto px-4 sm:px-8 pb-8 pt-0 flex flex-col space-y-3">
       
       {/* 1. Header */}
       <TodayHeader name={session.user.name} />
@@ -98,30 +97,11 @@ export default async function TodayPage() {
         />
       </section>
 
-      {/* Grid for bottom elements to save vertical space! */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-        {/* 4. Quote Section */}
-        <QuoteSection />
-
-        {/* 5. Journal Preview */}
-        <section>
-          <h2 className="text-[10px] tracking-widest uppercase text-stone-400 mb-4 font-semibold">
-            Today&apos;s Journal
-          </h2>
-          <NotesPreview 
-            yesterdayContent={yesterdayJournal?.content || null} 
-          />
-        </section>
-
-        {/* 6. Insights */}
-        <section>
-          <h2 className="text-[10px] tracking-widest uppercase text-stone-400 mb-4 font-semibold">
-            Insight
-          </h2>
-          <div className="pl-4 border-l-2 border-stone-300 dark:border-stone-700 italic text-stone-600 dark:text-stone-400 text-sm">
-            &quot;{insightText}&quot;
-          </div>
-        </section>
+      {/* Minimal Footer Insight */}
+      <div className="mt-16 pt-8 text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
+        <p className="font-serif italic text-stone-600 dark:text-stone-400 text-sm">
+          &quot;{insightText}&quot;
+        </p>
       </div>
 
     </main>

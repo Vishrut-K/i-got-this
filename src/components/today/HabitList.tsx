@@ -4,7 +4,7 @@ import { useState, useTransition, useOptimistic } from "react";
 
 import { addHabit, toggleHabitStatus, archiveHabit, updateHabitName } from "@/server/actions";
 import { ICONS, IconId, COLORS, ColorId } from "@/lib/constants";
-import { Plus } from "lucide-react";
+import { Plus, Edit2, Trash2 } from "lucide-react";
 import { calculateStreaks, calculateTodayProgress } from "@/lib/progress";
 import TodayStats from "./TodayStats";
 
@@ -150,7 +150,14 @@ export default function HabitList({
     });
   };
 
-  const dayNames = last7Days.map(d => new Date(d).toLocaleDateString('en-US', { weekday: 'short' }).charAt(0));
+  const dayData = last7Days.map(d => {
+    const [year, month, day] = d.split('-');
+    const localDate = new Date(Number(year), Number(month) - 1, Number(day));
+    return {
+      char: localDate.toLocaleDateString('en-US', { weekday: 'short' }).charAt(0),
+      num: localDate.getDate()
+    };
+  });
 
   const todayLogs = optimisticLogs.filter(l => l.date === todayStr);
   const { doneCount, eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
@@ -177,22 +184,36 @@ export default function HabitList({
         </p>
       )}
 
-      {/* Grid Header (Invisible on mobile, aligned on desktop) */}
+      {/* Spreadsheet Table Container */}
       {activeHabits.length > 0 && (
-        <div className="hidden md:grid grid-cols-12 gap-4 pb-2 text-[10px] font-medium tracking-widest text-stone-400 relative">
-          <div className="col-span-4 uppercase">Habit</div>
-          <div className="col-span-6 grid grid-cols-7 justify-items-center items-center">
-            {dayNames.map((day, i) => (
-              <span key={i} className={i === 6 ? "text-stone-800 dark:text-stone-200 font-bold" : ""}>
-                {i === 6 ? "TODAY" : day}
-              </span>
-            ))}
+        <div className="border border-stone-200/60 dark:border-stone-800/60 rounded-xl overflow-hidden shadow-sm bg-white/30 dark:bg-[#1A1A18]/30 mb-2">
+          
+          {/* Grid Header (Invisible on mobile, aligned on desktop) */}
+          <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 text-[10px] font-semibold tracking-[0.2em] uppercase text-stone-400 border-b border-stone-200/60 dark:border-stone-800/60 bg-stone-50/80 dark:bg-stone-900/40">
+            <div className="col-span-4">Habit</div>
+            <div className="col-span-6 grid grid-cols-7 justify-items-center">
+              {dayData.map((day, i) => (
+                <div key={i} className={`flex flex-col items-center leading-tight gap-0.5 ${i === 6 ? "text-stone-800 dark:text-stone-200" : ""}`}>
+                  {i === 6 ? (
+                    <>
+                      <span className="font-bold">TOD</span>
+                      <span className="text-[9px] font-semibold">{day.num}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{day.char}</span>
+                      <span className="text-[9px] opacity-70">{day.num}</span>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="col-span-2 text-right">Streak</div>
           </div>
-          <div className="col-span-2 text-right uppercase pr-4">Streak</div>
-        </div>
-      )}
-
-      {activeHabits.map((habit) => {
+          
+          {/* Rows Container */}
+          <div className="divide-y divide-stone-200/40 dark:divide-stone-800/40 flex flex-col">
+            {activeHabits.map((habit) => {
         const todayStatus = getStatus(habit.id, todayStr);
         const isAnimating = animatingId === habit.id;
         const IconComponent = ICONS[habit.iconId as IconId] || ICONS.activity;
@@ -203,15 +224,29 @@ export default function HabitList({
         
         return (
           <div key={habit.id} className="relative group">
-            {/* The main habit row */}
-            <div 
-              className="grid grid-cols-1 md:grid-cols-12 items-center gap-2 py-1.5 border-b border-stone-200/50 dark:border-stone-800/50 transition-all duration-500 ease-out hover:bg-stone-100/30 dark:hover:bg-stone-800/30 -mx-4 px-4 rounded-xl"
-            >
+            <div className="flex md:grid md:grid-cols-12 items-center justify-between gap-3 py-3 px-3 sm:px-4 hover:bg-stone-50/80 dark:hover:bg-stone-800/30 transition-colors duration-200">
               
-              {/* 1. Left: Icon and Name */}
-              <div className={`col-span-4 flex items-center gap-2.5 transition-colors ${todayStatus === "SKIP" ? "opacity-30" : ""}`}>
-                <div className={`p-1 rounded-md ${colorClass} shrink-0`}>
-                  <IconComponent size={16} strokeWidth={2.5} />
+              {/* MOBILE ONLY: Today Checkbox on the far left */}
+              <div className="md:hidden shrink-0">
+                <button
+                  onClick={() => handleToggleToday(habit.id)}
+                  aria-label={`Toggle habit ${habit.name} for today`}
+                  className={`w-[22px] h-[22px] rounded flex items-center justify-center transition-all duration-200 border-[1.5px]
+                    ${isAnimating ? "scale-110" : "scale-100"} 
+                    ${todayStatus === "DONE" ? "bg-[#4A6750] border-[#4A6750] text-white dark:bg-[#5C7E63] dark:border-[#5C7E63]" : ""}
+                    ${todayStatus === "SKIP" ? "bg-transparent border-stone-300 text-stone-400 dark:border-stone-600 dark:text-stone-500" : ""}
+                    ${todayStatus === "EMPTY" ? "border-[#A96455]/40 hover:border-[#A96455]/70 bg-transparent text-transparent dark:border-[#A96455]/50 dark:hover:border-[#A96455]/80" : ""}
+                  `}
+                >
+                  {todayStatus === "DONE" && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                  {todayStatus === "SKIP" && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>}
+                </button>
+              </div>
+
+              {/* Left: Icon and Name */}
+              <div className={`flex items-center gap-3 flex-1 min-w-0 md:flex-none md:w-auto md:col-span-4 shrink-0 transition-colors ${todayStatus === "SKIP" ? "opacity-40" : ""}`}>
+                <div className={`hidden sm:flex p-1.5 rounded-lg ${colorClass} shrink-0 items-center justify-center`}>
+                  <IconComponent size={14} strokeWidth={2.5} />
                 </div>
                 {editingHabitId === habit.id ? (
                   <input 
@@ -224,84 +259,92 @@ export default function HabitList({
                       if (e.key === "Enter") handleRename(habit.id);
                       if (e.key === "Escape") setEditingHabitId(null);
                     }}
-                    className="w-full bg-transparent border-b border-stone-400 dark:border-stone-600 outline-none font-serif text-lg text-stone-800 dark:text-stone-200"
+                    className="w-full bg-transparent border-b border-stone-400 dark:border-stone-600 outline-none font-serif text-[15px] sm:text-base text-stone-800 dark:text-stone-200"
                   />
                 ) : (
-                  <span className={`text-lg font-serif tracking-wide truncate ${todayStatus === "SKIP" ? "line-through decoration-stone-300" : "text-stone-800 dark:text-stone-200"}`}>
+                  <span className={`text-[15px] sm:text-base font-serif tracking-wide truncate ${todayStatus === "SKIP" ? "line-through decoration-stone-300 dark:decoration-stone-600" : "text-stone-800 dark:text-stone-200"}`}>
                     {habit.name}
                   </span>
                 )}
               </div>
               
-              {/* 2. Middle: The 7-Day Timeline with Inline Checkbox */}
-              <div className="col-span-6 grid grid-cols-7 justify-items-center items-center">
+              {/* Middle: 7-Day Timeline (Desktop Only) */}
+              <div className="hidden md:grid col-span-6 grid-cols-7 justify-items-center items-center">
                 {last7Days.map((dateStr, idx) => {
                   const status = getStatus(habit.id, dateStr);
                   const isToday = idx === 6;
                   
                   if (isToday) {
                     return (
-                      <button
-                        key={dateStr}
-                        onClick={() => handleToggleToday(habit.id)}
-                        aria-label={`Toggle habit ${habit.name} for today`}
-                        className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 border-2
-                          ${isAnimating ? "scale-125" : "scale-100"} 
-                          ${todayStatus === "DONE" ? "bg-[#4A6750] border-[#4A6750] text-[#F9F7F1] dark:bg-[#5C7E63] dark:border-[#5C7E63]" : ""}
-                          ${todayStatus === "SKIP" ? "bg-transparent border-stone-300 text-stone-400 dark:border-stone-600 dark:text-stone-500" : ""}
-                          ${todayStatus === "EMPTY" ? "border-[#A96455]/40 hover:border-[#A96455]/70 bg-transparent text-transparent dark:border-[#A96455]/50 dark:hover:border-[#A96455]/80" : ""}
-                        `}
-                      >
-                        {todayStatus === "DONE" && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
-                        {todayStatus === "SKIP" && <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>}
-                      </button>
+                      <div key={dateStr} className="flex justify-center">
+                        <button
+                          onClick={() => handleToggleToday(habit.id)}
+                          aria-label={`Toggle habit ${habit.name} for today`}
+                          className={`w-6 h-6 rounded flex items-center justify-center transition-all duration-200 border-[1.5px] shadow-sm
+                            ${isAnimating ? "scale-110" : "scale-100"} 
+                            ${todayStatus === "DONE" ? "bg-[#4A6750] border-[#4A6750] text-white dark:bg-[#5C7E63] dark:border-[#5C7E63]" : ""}
+                            ${todayStatus === "SKIP" ? "bg-transparent border-stone-300 text-stone-400 dark:border-stone-600 dark:text-stone-500" : ""}
+                            ${todayStatus === "EMPTY" ? "border-[#A96455]/40 hover:border-[#A96455]/70 bg-transparent text-transparent dark:border-[#A96455]/50 dark:hover:border-[#A96455]/80" : ""}
+                          `}
+                        >
+                          {todayStatus === "DONE" && <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path></svg>}
+                          {todayStatus === "SKIP" && <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>}
+                        </button>
+                      </div>
                     );
                   } else {
                     return (
-                      <div 
-                        key={dateStr}
-                        className={`w-3.5 h-3.5 rounded-sm border ${
-                          status === "DONE" ? "bg-[#4A6750] border-[#4A6750] dark:bg-[#5C7E63] dark:border-[#5C7E63]" : 
-                          status === "SKIP" ? "bg-stone-200 border-stone-200 dark:bg-stone-800 dark:border-stone-800 opacity-50" : 
-                          "bg-transparent border-[#A96455]/30 dark:border-[#A96455]/30"
-                        }`} 
-                      />
+                      <div key={dateStr} className="flex justify-center">
+                        <div 
+                          className={`w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-colors ${
+                            status === "DONE" ? "bg-[#4A6750] dark:bg-[#5C7E63]" : 
+                            status === "SKIP" ? "bg-stone-200 dark:bg-stone-700" : 
+                            "bg-stone-200/50 dark:bg-stone-800"
+                          }`} 
+                        />
+                      </div>
                     );
                   }
                 })}
               </div>
 
-              {/* 3. Right: Streak & Actions */}
-              <div className="col-span-2 flex items-center justify-end gap-2 pr-4">
-                <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              {/* Right: Streak & Actions */}
+              <div className="flex items-center justify-end gap-3 shrink-0 ml-auto md:ml-0 md:col-span-2 w-[60px] sm:w-[80px] md:w-auto">
+                
+                {/* Floating Actions on Hover */}
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity absolute right-16 sm:right-20 md:right-16 bg-stone-100/90 dark:bg-stone-800/90 backdrop-blur-sm px-1.5 py-1 rounded-md shadow-sm border border-stone-200/50 dark:border-stone-700/50">
                   <button 
                     onClick={() => {
                       setEditHabitName(habit.name);
                       setEditingHabitId(habit.id);
                     }}
-                    aria-label={`Edit habit ${habit.name}`}
-                    className="text-xs font-sans uppercase tracking-widest text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+                    className="p-1 text-stone-400 hover:text-stone-800 dark:hover:text-stone-200 transition-colors"
+                    title="Edit Habit"
                   >
-                    Edit
+                    <Edit2 size={14} strokeWidth={2.5} />
                   </button>
                   <button 
                     onClick={() => handleArchive(habit.id)}
-                    aria-label={`Archive habit ${habit.name}`}
-                    className="text-xs font-sans uppercase tracking-widest text-stone-400 hover:text-red-500 disabled:opacity-30 transition-colors"
+                    className="p-1 text-stone-400 hover:text-red-500 transition-colors"
+                    title="Archive Habit"
                   >
-                    Archive
+                    <Trash2 size={14} strokeWidth={2.5} />
                   </button>
                 </div>
-                <div className="flex items-center gap-1.5 text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors ml-2">
-                  <span className="text-sm">🔥</span>
-                  <span className="font-medium text-sm tracking-widest uppercase">{currentStreak}</span>
+
+                {/* Streak */}
+                <div className={`flex items-center gap-1.5 text-stone-400 group-hover:text-stone-600 dark:group-hover:text-stone-300 transition-colors ${currentStreak > 0 ? "opacity-100" : "opacity-40"}`}>
+                  <span className="text-[12px] sm:text-[14px]">🔥</span>
+                  <span className="font-semibold text-[13px] sm:text-[14px] tracking-widest">{currentStreak}</span>
                 </div>
               </div>
             </div>
-
           </div>
         );
-      })}
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Add Habit Input */}
       <div className="pt-6">

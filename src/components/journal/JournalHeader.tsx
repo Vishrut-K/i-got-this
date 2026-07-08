@@ -36,7 +36,7 @@ export default function JournalHeader({ currentDate, isToday }: { currentDate: s
 
   return (
     <>
-    <div className={`flex items-center justify-between mb-2 py-2 border-b border-stone-200/50 dark:border-stone-800/50 relative z-10 transition-opacity duration-300 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
+    <div className={`flex flex-wrap sm:flex-nowrap items-center justify-between gap-y-3 mb-2 py-2 border-b border-stone-200/50 dark:border-stone-800/50 relative z-10 transition-opacity duration-300 ${isPending ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
       
       {/* Date & Today Badge */}
       <div className="flex items-center gap-3">
@@ -51,7 +51,7 @@ export default function JournalHeader({ currentDate, isToday }: { currentDate: s
       </div>
 
       {/* Navigation & Search */}
-      <div className="flex items-center gap-4 text-stone-400 text-xs font-medium tracking-wide">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-stone-400 text-xs font-medium tracking-wide">
         
         {/* Date Stepper */}
         <div className="flex items-center gap-1 bg-stone-100/50 dark:bg-stone-900/50 rounded-md px-1 py-1">

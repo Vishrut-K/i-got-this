@@ -54,7 +54,7 @@ export default async function JournalPage(
   });
 
   return (
-    <main className="max-w-[760px] mx-auto px-8 pb-32 pt-2 flex flex-col h-full min-h-screen">
+    <main className="max-w-[760px] mx-auto px-4 sm:px-8 pb-32 pt-2 flex flex-col h-full min-h-screen">
       <JournalHeader currentDate={dateStr} isToday={isToday} />
       <JournalEditor initialContent={entry?.content || ""} date={dateStr} />
       
