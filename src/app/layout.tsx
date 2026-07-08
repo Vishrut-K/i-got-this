@@ -32,11 +32,28 @@ const PremiumPaperBackground = () => (
 );
 
 export const metadata = {
-  title: "I-got-this",
+  title: "I Got This",
   description: "A calm operating system for daily habits, reflection, and personal momentum.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default" as const,
+    title: "I Got This",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 import prisma from "@/lib/prisma";
+
+export const viewport = {
+  themeColor: "#4A6750",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default async function RootLayout({
   children,
@@ -55,6 +72,9 @@ export default async function RootLayout({
 
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+      </head>
       <body suppressHydrationWarning className={`${inter.variable} ${lora.variable} font-sans min-h-screen bg-transparent text-foreground antialiased relative overflow-y-scroll ${accentTheme}`}>
         
         <PremiumPaperBackground />
