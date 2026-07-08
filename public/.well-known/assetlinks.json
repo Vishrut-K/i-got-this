@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.i_got_this_tracker.twa",
+    "sha256_cert_fingerprints": ["65:AF:BE:1C:FE:3A:9E:44:5C:8C:1A:CA:69:A5:1E:47:1D:C9:02:66:78:C2:01:F0:CA:84:37:04:4A:54:89:2A"]
+  }
+}]
