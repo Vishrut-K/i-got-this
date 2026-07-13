@@ -336,13 +336,9 @@ export async function getJourneyStats() {
     };
   });
 
-  // 5. Build Habit Matrix (Last 14 Days)
-  const cookieStoreTz = await cookies();
-  const globalTz = cookieStoreTz.get("x-timezone")?.value || "UTC";
-  const globalTodayStr = getLocalTodayStr(globalTz);
 
   const matrixDays: string[] = [];
-  const startMatrixDate = new Date(globalTodayStr);
+  const startMatrixDate = new Date(todayStr);
   startMatrixDate.setDate(startMatrixDate.getDate() - 13);
   for (let i = 0; i < 14; i++) {
     const d = new Date(startMatrixDate);
