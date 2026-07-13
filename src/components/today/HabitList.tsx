@@ -63,7 +63,7 @@ export default function HabitList({
   );
 
   const activeHabits = optimisticHabits.filter(h => !h.archivedAt);
-  const todayStr = last7Days[6];
+  const todayStr = last7Days[last7Days.length  - 1]; 
 
   const getStatus = (habitId: string, date: string) => {
     return optimisticLogs.find((l) => l.habitId === habitId && l.date === date)?.status || "EMPTY";
