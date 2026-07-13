@@ -1,7 +1,5 @@
 import { Dumbbell, BookOpen, Droplets, Brain, Moon, Leaf, Activity, Coffee, PenTool } from "lucide-react";
 
-// Threshold for a day to be considered "Productive"
-export const PRODUCTIVE_THRESHOLD = 70;
 
 // The single source of truth for Habit Icons
 export const ICONS = {
