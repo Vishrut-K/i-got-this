@@ -37,7 +37,7 @@ export default async function TodayPage() {
 
   // Calculate the last 7 days (including today) using timezone
   const last7Days = getLast7DaysStr(tz);
-  const todayStr = last7Days[6];
+  const todayStr = last7Days[last7Days.length - 1]; // Last element is today
 
   // Fetch ALL logs for the user's active habits (needed for streaks)
   const allLogs = await prisma.habitLog.findMany({
@@ -52,15 +52,6 @@ export default async function TodayPage() {
 
   // Calculate true progress using the new "SKIP is neutral" rules
   const { eligibleHabitsCount, percentage } = calculateTodayProgress(activeHabits, todayLogs);
-
-  // Fetch yesterday's journal
-  const yesterdayStr = last7Days[5];
-
-  const yesterdayJournal = await prisma.journalEntry.findUnique({
-    where: {
-      userId_date: { userId: session.user.id, date: yesterdayStr }
-    }
-  });
   
   let insightText = "Every master was once a beginner. Start small today.";
   if (percentage === 100 && eligibleHabitsCount > 0) {

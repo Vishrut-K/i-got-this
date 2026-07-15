@@ -6,6 +6,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { getLocalTodayStr } from "@/lib/date";
+import { calculateStreaks } from "@/lib/progress";
 
 export async function addHabit(name: string, iconId: string, color: string) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -270,72 +271,25 @@ export async function getJourneyStats() {
   const tz = cookieStore.get("x-timezone")?.value || "UTC";
   const todayStr = getLocalTodayStr(tz);
 
-  const habitBreakdown = habits.filter(h => !h.archivedAt).map(habit => {
-    const logs = allLogs.filter(l => l.habitId === habit.id).sort((a, b) => a.date.localeCompare(b.date));
-    
-    let currentStreak = 0;
-    let bestStreak = 0;
-    let habitCompletions = 0;
-    
-    // Convert to a map for O(1) lookups
-    const logMap = new Map(logs.map(l => [l.date, l.status]));
-    
-    // Calculate streaks by iterating backwards from today
-    
-    // Check current streak
-    let d = new Date(todayStr);
-    let loops = 0;
-    while (loops < 1000) {
-      const dStr = d.toISOString().split('T')[0];
-      const status = logMap.get(dStr);
-      if (status === "DONE") {
-        currentStreak++;
-      } else if (status === "SKIP") {
-        // Skip doesn't break, but doesn't add
-      } else {
-        // If it's today and not filled, we don't break the streak yet, just look at yesterday
-        if (dStr !== todayStr) break;
-      }
-      d.setDate(d.getDate() - 1);
-      loops++;
-    }
-
-    // Calculate best streak (simplified forward pass)
-    let tempStreak = 0;
-    const createdAt = habit.createdAt.toISOString().split('T')[0];
-    d = new Date(createdAt);
-    
-    while (d.toISOString().split('T')[0] <= todayStr) {
-      const dStr = d.toISOString().split('T')[0];
-      const status = logMap.get(dStr);
-      if (status === "DONE") {
-        tempStreak++;
-        if (tempStreak > bestStreak) bestStreak = tempStreak;
-        habitCompletions++;
-      } else if (status === "SKIP") {
-        // Keeps streak alive
-      } else {
-        tempStreak = 0; // Broken
-      }
-      d.setDate(d.getDate() + 1);
-    }
-
-    // Completion Rate (since creation)
-    const daysSinceCreation = Math.floor((new Date(todayStr).getTime() - new Date(createdAt).getTime()) / (1000 * 3600 * 24)) + 1;
-    const completionRate = daysSinceCreation > 0 ? (habitCompletions / daysSinceCreation) * 100 : 0;
+    // Our Assembly Line!
+  const habitBreakdown = habits.filter(h => !h.archivedAt).map((habit) => {
+    // Ask the single source of truth!
+    const streaks = calculateStreaks(habit.id, allLogs, todayStr);
 
     return {
       id: habit.id,
       name: habit.name,
       color: habit.color,
       iconId: habit.iconId,
-      currentStreak,
-      bestStreak,
-      totalCompletions: habitCompletions,
-      completionRate: Math.round(completionRate)
+      currentStreak: streaks.currentStreak,
+      bestStreak: streaks.bestStreak,
+      totalCompletions: 0, // We'll add this math back later
+      completionRate: 0    // We'll add this math back later
     };
   });
 
+  // Find the longest streak out of all habits
+  const longestActiveStreak = habitBreakdown.reduce((max, h) => Math.max(max, h.currentStreak), 0);
 
   const matrixDays: string[] = [];
   const startMatrixDate = new Date(todayStr);
@@ -363,22 +317,22 @@ export async function getJourneyStats() {
       } else {
         habitMatrixData[habit.id][day] = "EMPTY";
       }
+      
     });
   });
-
-  // 6. Find global longest active streak
-  const longestActiveStreak = habitBreakdown.reduce((max, h) => Math.max(max, h.currentStreak), 0);
-
-  return {
+    return {
     totalCompletions,
     perfectDays,
     longestActiveStreak,
     heatmapData,
-    habitBreakdown,
+    habitBreakdown, // We need to calculate this again!
     matrixDays,
     habitMatrixData
   };
-}
+} // <-- Don't forget the closing bracket!
+  
+
+
 
 // ==========================================
 // STEP 10: THE PROFILE & PREFERENCES
@@ -537,27 +491,6 @@ export async function getUserProfile() {
     }
   };
 }
-
-export async function getArchivedHabits() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Not logged in!");
-
-  const habits = await prisma.habit.findMany({
-    where: { 
-      userId: session.user.id,
-      archivedAt: { not: null }
-    },
-    include: {
-      _count: {
-        select: { logs: { where: { status: "DONE" } } }
-      }
-    },
-    orderBy: { archivedAt: 'desc' }
-  });
-
-  return habits;
-}
-
 export async function restoreHabit(habitId: string) {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) throw new Error("Not logged in!");
